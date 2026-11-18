@@ -1,0 +1,29 @@
+<div class="with-side">
+<aside class="side pc-only" aria-label="관리 메뉴">
+  <div class="side__group">
+    <h2>관리자</h2>
+    <nav class="side__nav">
+      <a href="${ctx}/admin" aria-current="${tab == 'dashboard' ? 'page' : 'false'}"><ui:icon name="chart-column" />매출 요약</a>
+      <a href="${ctx}/admin/orders" aria-current="${tab == 'orders' ? 'page' : 'false'}"><ui:icon name="clipboard-list" />주문 관리</a>
+      <a href="${ctx}/admin/books" aria-current="${tab == 'books' ? 'page' : 'false'}"><ui:icon name="library-big" />도서 관리</a>
+      <a href="${ctx}/admin/coupons" aria-current="${tab == 'coupons' ? 'page' : 'false'}"><ui:icon name="ticket-percent" />쿠폰 관리</a>
+    </nav>
+  </div>
+  <div class="side__group">
+    <h2>바로 가기</h2>
+    <nav class="side__nav">
+      <a href="${ctx}/books"><ui:icon name="house" />서점 화면</a>
+      <a href="${ctx}/admin/books/edit"><ui:icon name="plus" />새 도서 등록</a>
+    </nav>
+  </div>
+</aside>
+<div class="admin-main">
+<div class="page-head">
+  <h1 class="t-heading"><span class="m-only">관리자</span><span class="pc-only">${tab == 'dashboard' ? '매출 요약' : (tab == 'orders' ? '주문 관리' : (tab == 'books' ? '도서 관리' : '쿠폰 관리'))}</span></h1>
+</div>
+<nav class="tabs scroll-tabs" role="tablist" aria-label="관리 메뉴">
+  <a role="tab" href="${ctx}/admin" aria-selected="${tab == 'dashboard'}">매출 요약</a>
+  <a role="tab" href="${ctx}/admin/orders" aria-selected="${tab == 'orders'}">주문 관리</a>
+  <a role="tab" href="${ctx}/admin/books" aria-selected="${tab == 'books'}">도서 관리</a>
+  <a role="tab" href="${ctx}/admin/coupons" aria-selected="${tab == 'coupons'}">쿠폰 관리</a>
+</nav>
