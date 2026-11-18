@@ -23,6 +23,8 @@ import org.apache.tomcat.dbcp.dbcp2.BasicDataSource;
 public final class DBUtil {
 	private static final long MINUTE = 60_000L;
 	private static final BasicDataSource POOL = new BasicDataSource();
+	/** db.properties 설정 실수(비밀번호를 안 넣음 등)를 연결 전에 알려 주기 위한 안내. 문제없으면 null */
+	private static String configError;
 
 	static {
 		Properties p = new Properties();
@@ -30,7 +32,8 @@ public final class DBUtil {
 			if (in == null)
 				throw new IllegalStateException(
 						"db.properties 파일을 찾지 못했어요. src/main/java/db.properties.example을 복사해서 db.properties로 만드세요.");
-			p.load(in);
+			// UTF-8로 읽는다 (기본 ISO-8859-1로 읽으면 한글이 깨져 PostgreSQL이 Prohibited character 오류를 낸다)
+			p.load(new java.io.InputStreamReader(in, java.nio.charset.StandardCharsets.UTF_8));
 		} catch (Exception e) {
 			throw new ExceptionInInitializerError(e);
 		}
@@ -39,7 +42,11 @@ public final class DBUtil {
 		POOL.setDriverClassName(p.getProperty("db.driver", "com.mysql.cj.jdbc.Driver"));
 		POOL.setUrl(p.getProperty("db.url"));
 		POOL.setUsername(p.getProperty("db.user"));
-		POOL.setPassword(p.getProperty("db.password"));
+		String pw = p.getProperty("db.password", "").trim();
+		POOL.setPassword(pw);
+		if (pw.isEmpty() || pw.startsWith("PUT_") || pw.startsWith("<") || pw.startsWith("여기에"))
+			configError = "db.properties의 db.password에 실제 DB 비밀번호를 넣어 주세요. "
+					+ "(Supabase: Project Settings → Database에서 확인·재설정) 넣은 뒤 Project Clean → 서버 Restart";
 		POOL.setMaxTotal(intProp(p, "db.pool.maxTotal", 10));
 		POOL.setMaxIdle(intProp(p, "db.pool.maxIdle", 5));
 		POOL.setMinIdle(0);
@@ -66,6 +73,8 @@ public final class DBUtil {
 
 	/** 풀에서 연결을 하나 빌린다. try-with-resources로 닫으면 풀에 돌아간다 */
 	public static Connection getConnection() throws SQLException {
+		if (configError != null)
+			throw new SQLException(configError);
 		return POOL.getConnection();
 	}
 

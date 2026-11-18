@@ -198,6 +198,7 @@ mysql -u root -p --default-character-set=utf8mb4 < sql\schema.sql
 | 증상 | 해결 |
 |---|---|
 | `db.properties 파일을 찾지 못했어요` | `db.properties.example`을 복사해 `db.properties`로 만들었는지 확인 |
+| `db.properties의 db.password에 실제 DB 비밀번호를 넣어 주세요` | `db.password=` 뒤의 자리 표시(`PUT_…`)를 실제 비밀번호로 바꾸고 Project Clean → Restart |
 | `IllegalArgumentException: Prohibited character` | `db.password`에 한글·자리 표시(`여기에_…`)가 남아 있음 → 실제 비밀번호(영문·숫자·기호)로 바꾸고 Project Clean → Restart |
 | 설정을 고쳤는데 그대로임 | Eclipse가 `build/classes`의 예전 복사본을 씀 → 프로젝트 Refresh(F5) → `Project > Clean` → 톰캣 Clean → Restart |
 | `Unknown column 'status'` 등 | 최신 `schema.sql` / `schema-postgres.sql` 다시 실행 (데이터가 지워져요) |
