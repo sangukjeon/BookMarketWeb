@@ -20,7 +20,7 @@
 .map td:first-child{color:#141A24;font-weight:600}
 </style></head><body><div class="wrap">
 <h1>BookMarketWeb 애플리케이션 구조도</h1>
-<p class="sub">Java Swing 데스크톱 앱 → Tomcat 10.1(WAS) 위의 MVC 웹 애플리케이션 + MySQL(JDBC)</p>
+<p class="sub">Java Swing 데스크톱 앱 → Tomcat 10.1(WAS) 위의 MVC 웹 애플리케이션 + Supabase(PostgreSQL) · MySQL (JDBC) + 카카오 책 검색 API</p>
 <div class="cols">
  <div class="col tier"><h2>브라우저</h2>
   <div class="n"><b>HTML · CSS</b><span>DESIGN.md 토큰<br>모바일 우선 / PC 2단</span></div>
@@ -56,7 +56,7 @@
    <div class="n"><b>Coupon · Review</b><span>discountFor(), 별점</span></div>
   </div>
   <div class="cap">외부 API</div>
-  <div class="n blue"><b>BookCatalog → AladinClient</b><span>베스트셀러·신간·검색 (HttpClient + MiniJson) → BookDAO에 저장, 키 없으면 DB</span></div>
+  <div class="n blue"><b>BookCatalog → KakaoBookClient</b><span>검색은 카카오 (HttpClient + MiniJson) → BookDAO에 저장, 탭·키 없으면 DB</span></div>
   <div class="cap">세션 객체</div>
   <div class="n"><b>CartInterface ← Cart 1:N CartItem</b><span>static mCartCount 제거 → 사용자별 장바구니</span></div>
   <div class="cap">DAO (JDBC · PreparedStatement)</div>
@@ -69,11 +69,11 @@
   <div class="n"><b>oauth: SocialProvider</b><span>MockSocialProvider (지금) → Google/Naver/Kakao 구현으로 교체</span></div>
  </div>
  <div class="arrow">→</div>
- <div class="col tier"><h2>MySQL 8</h2>
-  <div class="n"><b>bookmarket</b><span>utf8mb4</span></div>
+ <div class="col tier"><h2>DB (JDBC · DBCP)</h2>
+  <div class="n"><b>Supabase</b><span>클라우드 PostgreSQL · 또는 내 PC MySQL 8</span></div>
   <div class="n">member</div><div class="n">book</div><div class="n">coupon</div><div class="n">orders</div><div class="n">order_item</div><div class="n">wishlist</div><div class="n">review</div>
   <div class="cap" style="margin-top:8px">외부</div>
-  <div class="n blue"><b>알라딘 Open API</b><span>ItemList · ItemSearch (JSON)</span></div>
+  <div class="n blue"><b>카카오 책 검색 API</b><span>/v3/search/book (JSON)</span></div>
  </div>
 </div>
 
@@ -81,7 +81,7 @@
 <tr><th style="width:280px">원본 Swing (BookMarketSwing)</th><th style="width:420px">웹 (BookMarketWeb)</th><th>바뀐 점</th></tr>
 <tr><td>Welcome · GuestWindow</td><td>/login, /signup, /oauth/*</td><td>이름·연락처만 받던 입장 → 회원가입, 암호화 로그인, 소셜 로그인(목업)</td></tr>
 <tr><td>MainWindow 버튼 9개</td><td>상단 메뉴바(PC) · 하단 시트 메뉴(폰)</td><td>버튼 나열 → 화면별 메뉴 체계, 장바구니 개수 배지</td></tr>
-<tr><td>CartAddItemPage</td><td>/books, /books/detail</td><td>JTable 목록 → 알라딘 베스트셀러·신간·검색, 정렬·페이지, 상세·리뷰·찜, 최근 본 책</td></tr>
+<tr><td>CartAddItemPage</td><td>/books, /books/detail</td><td>JTable 목록 → 카카오 검색 + 베스트셀러·신간, 정렬·페이지, 상세·리뷰·찜, 최근 본 책</td></tr>
 <tr><td>CartItemListPage · bt5 (빈 버튼)</td><td>/cart</td><td>수량 줄이기·늘리기 구현, 배송비 계산</td></tr>
 <tr><td>CartShippingPage</td><td>/order</td><td>배송 정보 + 쿠폰 적용 + 결제 금액 요약</td></tr>
 <tr><td>CartOrderBillPage</td><td>/orders/receipt, /orders</td><td>화면에만 보이던 영수증 → DB 저장, 다시 보기·인쇄, 주문 취소</td></tr>

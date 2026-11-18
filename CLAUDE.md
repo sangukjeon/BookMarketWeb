@@ -21,8 +21,8 @@
 ## 폴더
 ```
 src/main/java/
-  db.properties          DB 접속 정보 (DBUtil이 클래스패스에서 읽음). 내 PC MySQL(bookmarket/bookmarket1234) 기본값으로 **저장소에 포함**
-  db.properties.example  접속 예시: A. 내 PC MySQL / B. TiDB
+  db.properties          DB 접속 정보 (DBUtil이 클래스패스에서 읽음). 비밀번호가 들어가므로 **.gitignore 대상** (example을 복사해서 만든다)
+  db.properties.example  접속 예시: A. Supabase / B. 내 PC MySQL
   api.properties         카카오 REST API 키 (비어 있으면 DB 모드). .gitignore 대상, 예시는 api.properties.example
   com/market/
     controller/  서블릿 (@WebServlet). 요청 → DAO → request 속성 → Web.render("뷰이름")
@@ -92,7 +92,7 @@ docs/              DESIGN.md, erd.png, architecture.png, screens/, src/(다이�
    - 관리자 주문 관리에서 한 단계씩 앞으로만 변경 (UPDATE … WHERE status = 이전 상태).
    - **취소는 ORDERED·PREPARING에서만** (회원·관리자 모두). `OrderDAO.cancel`의 WHERE를 `status IN ('ORDERED','PREPARING')`로. 화면에는 배송 진행 막대와 "배송이 시작돼서 취소할 수 없어요" 안내.
    - 매출·판매량·쿠폰·리뷰 판단의 "취소되지 않은 주문"은 `status <> 'CANCELLED'`로 바꿔야 한다 (지금 `= 'ORDERED'`로 쓴 곳 모두: BookDAO.SOLD, OrderDAO.hasUsedCoupon/hasPurchased/summary).
-3. ~~클라우드 DB (TiDB Cloud Starter)~~ **사용 중단 (2026-11-18, 사용자 결정: 각자 PC의 MySQL로 돌아감)**. 관련 파일(schema-cloud.sql, example의 B)은 참고용으로만 남김. 기존 기록:: `schema-cloud.sql`, `db.properties.example` + `.gitignore`, DBUtil 연결 풀, README 2-⑤·문제 해결.
+3. ~~클라우드 DB (TiDB Cloud Starter)~~ **사용 중단 → Supabase(PostgreSQL)로 대체 (2026-11-18)**. 관련 파일(schema-cloud.sql, example의 B)은 참고용으로만 남김. 기존 기록:: `schema-cloud.sql`, `db.properties.example` + `.gitignore`, DBUtil 연결 풀, README 2-⑤·문제 해결.
    - 남은 확인: 사용자가 TiDB 인스턴스를 만들고 이클립스에서 접속 → `e2e.py` 통과 확인 (작업한 PC에는 JDK·톰캣이 없어 컴파일·실행 확인을 못 함).
    - TiDB의 AUTO_INCREMENT는 번호가 건너뛸 수 있음(기능 문제 없음). CHECK 제약은 기본 무시될 수 있으므로 rating 검사는 서버 코드에서도 한다(이미 함).
 4. (선택) 인터넷 배포: GitHub Pages는 정적 파일만 가능해 이 앱을 실행할 수 없다. 배포하려면 `Dockerfile`(tomcat:10.1 이미지에 WAR 배포) + Render 같은 Docker 호스팅 + 클라우드 DB 조합. 사용자 확인 후 진행.
