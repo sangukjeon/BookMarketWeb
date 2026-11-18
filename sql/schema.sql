@@ -35,6 +35,7 @@ CREATE TABLE member (
   provider      VARCHAR(10)  NOT NULL DEFAULT 'LOCAL' COMMENT 'LOCAL / GOOGLE / NAVER / KAKAO',
   provider_id   VARCHAR(100) NULL,
   role          VARCHAR(10)  NOT NULL DEFAULT 'USER'  COMMENT 'USER / ADMIN',
+  status        VARCHAR(10)  NOT NULL DEFAULT 'ACTIVE' COMMENT 'ACTIVE / SUSPENDED (정지되면 로그인 불가)',
   created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (member_no),
   UNIQUE KEY uk_member_login (login_id),

@@ -7,6 +7,7 @@
       <a href="${ctx}/admin/orders" aria-current="${tab == 'orders' ? 'page' : 'false'}"><ui:icon name="clipboard-list" />주문 관리</a>
       <a href="${ctx}/admin/books" aria-current="${tab == 'books' ? 'page' : 'false'}"><ui:icon name="library-big" />도서 관리</a>
       <a href="${ctx}/admin/coupons" aria-current="${tab == 'coupons' ? 'page' : 'false'}"><ui:icon name="ticket-percent" />쿠폰 관리</a>
+      <a href="${ctx}/admin/members" aria-current="${tab == 'members' ? 'page' : 'false'}"><ui:icon name="users" />회원 관리</a>
     </nav>
   </div>
   <div class="side__group">
@@ -19,11 +20,12 @@
 </aside>
 <div class="admin-main">
 <div class="page-head">
-  <h1 class="t-heading"><span class="m-only">관리자</span><span class="pc-only">${tab == 'dashboard' ? '매출 요약' : (tab == 'orders' ? '주문 관리' : (tab == 'books' ? '도서 관리' : '쿠폰 관리'))}</span></h1>
+  <h1 class="t-heading"><span class="m-only">관리자</span><span class="pc-only">${tab == 'dashboard' ? '매출 요약' : (tab == 'orders' ? '주문 관리' : (tab == 'books' ? '도서 관리' : (tab == 'members' ? '회원 관리' : '쿠폰 관리')))}</span></h1>
 </div>
 <nav class="tabs scroll-tabs" role="tablist" aria-label="관리 메뉴">
   <a role="tab" href="${ctx}/admin" aria-selected="${tab == 'dashboard'}">매출 요약</a>
   <a role="tab" href="${ctx}/admin/orders" aria-selected="${tab == 'orders'}">주문 관리</a>
   <a role="tab" href="${ctx}/admin/books" aria-selected="${tab == 'books'}">도서 관리</a>
   <a role="tab" href="${ctx}/admin/coupons" aria-selected="${tab == 'coupons'}">쿠폰 관리</a>
+  <a role="tab" href="${ctx}/admin/members" aria-selected="${tab == 'members'}">회원 관리</a>
 </nav>

@@ -97,6 +97,11 @@ public class SocialLoginServlet extends HttpServlet {
 			try {
 				Member m = memberDAO.findOrCreateSocial(profile.provider(), profile.providerId(), profile.name(),
 						profile.email());
+				if (m.isSuspended()) {
+					Web.flash(req, "이용이 정지된 계정이에요. 관리자에게 문의해 주세요.");
+					Web.redirect(req, resp, "/login");
+					return;
+				}
 				Web.login(req, m);
 				Web.flash(req, p.label() + " 계정으로 로그인했어요");
 				Web.redirect(req, resp, next);

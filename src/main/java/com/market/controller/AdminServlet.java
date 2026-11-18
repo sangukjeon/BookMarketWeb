@@ -5,8 +5,11 @@ import java.sql.SQLException;
 
 import com.market.dao.BookDAO;
 import com.market.dao.CouponDAO;
+import com.market.dao.MemberDAO;
 import com.market.dto.Book;
 import com.market.dto.Coupon;
+import com.market.dto.Member;
+import com.market.util.MemberSessions;
 import com.market.util.Web;
 
 import jakarta.servlet.ServletException;
@@ -17,14 +20,18 @@ import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * 관리자 — 원본 AdminPage(도서 추가)를 등록·수정·삭제와 쿠폰 관리로 넓혔다.
- * /admin(매출 요약), /admin/orders(주문 관리), /admin/books, /admin/books/edit(?id=), /admin/books/delete, /admin/coupons
+ * /admin(매출 요약), /admin/orders(주문 관리), /admin/books, /admin/books/edit(?id=), /admin/books/delete, /admin/coupons,
+ * /admin/members(회원 관리), /admin/members/detail(?no=), POST /admin/members/status·role·password
  */
-@WebServlet({ "/admin", "/admin/orders", "/admin/books", "/admin/books/edit", "/admin/books/delete", "/admin/coupons" })
+@WebServlet({ "/admin", "/admin/orders", "/admin/books", "/admin/books/edit", "/admin/books/delete", "/admin/coupons",
+		"/admin/members", "/admin/members/detail", "/admin/members/status", "/admin/members/role",
+		"/admin/members/password" })
 public class AdminServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private final BookDAO bookDAO = new BookDAO();
 	private final CouponDAO couponDAO = new CouponDAO();
 	private final com.market.dao.OrderDAO orderDAO = new com.market.dao.OrderDAO();
+	private final MemberDAO memberDAO = new MemberDAO();
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -38,6 +45,10 @@ public class AdminServlet extends HttpServlet {
 				req.setAttribute("dayMax", Math.max(max, 1));
 				req.setAttribute("weekTotal", days.stream().mapToLong(com.market.dao.OrderDAO.DayRevenue::amount).sum());
 				req.setAttribute("recentOrders", orderDAO.findAll(null).stream().limit(5).toList());
+				int[] mc = memberDAO.counts();
+				req.setAttribute("memberTotal", mc[0]);
+				req.setAttribute("memberToday", mc[1]);
+				req.setAttribute("memberSuspended", mc[2]);
 				Web.render(req, resp, "admin/dashboard");
 				break;
 			case "/admin/orders":
@@ -71,12 +82,98 @@ public class AdminServlet extends HttpServlet {
 				req.setAttribute("coupons", couponDAO.findAll());
 				Web.render(req, resp, "admin/coupons");
 				break;
+			case "/admin/members":
+				String q = Web.trim(req.getParameter("q"));
+				String provider = oneOf(req.getParameter("provider"), "LOCAL", "KAKAO", "NAVER", "GOOGLE");
+				String role = oneOf(req.getParameter("role"), "USER", "ADMIN");
+				String mstatus = oneOf(req.getParameter("status"), "ACTIVE", "SUSPENDED");
+				req.setAttribute("q", q);
+				req.setAttribute("provider", provider);
+				req.setAttribute("role", role);
+				req.setAttribute("mstatus", mstatus);
+				req.setAttribute("members", memberDAO.search(q, provider, role, mstatus));
+				int[] counts = memberDAO.counts();
+				req.setAttribute("memberTotal", counts[0]);
+				req.setAttribute("memberSuspended", counts[2]);
+				Web.render(req, resp, "admin/members");
+				break;
+			case "/admin/members/detail":
+				Member target = memberDAO.findByNo(Web.toInt(req.getParameter("no"), -1));
+				if (target == null) {
+					resp.sendError(404, "찾는 회원이 없어요.");
+					return;
+				}
+				java.util.List<com.market.dto.Order> orders = orderDAO.findByMember(target.getMemberNo());
+				target.setOrderCount((int) orders.stream().filter(o -> !o.isCancelled()).count());
+				target.setTotalSpent(orders.stream().filter(o -> !o.isCancelled()).mapToLong(o -> o.getPayAmount()).sum());
+				req.setAttribute("target", target);
+				req.setAttribute("orders", orders);
+				req.setAttribute("self", target.getMemberNo() == Web.member(req).getMemberNo());
+				// 비밀번호 초기화 직후 한 번만 보여 준다
+				Object temp = req.getSession().getAttribute("tempPassword:" + target.getMemberNo());
+				if (temp != null) {
+					req.setAttribute("tempPassword", temp);
+					req.getSession().removeAttribute("tempPassword:" + target.getMemberNo());
+				}
+				Web.render(req, resp, "admin/member-detail");
+				break;
 			default:
 				resp.sendError(405);
 			}
 		} catch (SQLException e) {
 			throw new ServletException(e);
 		}
+	}
+
+	/** 허용된 값이면 그대로, 아니면 빈 문자열 (필터 조건) */
+	private static String oneOf(String v, String... allowed) {
+		for (String a : allowed)
+			if (a.equals(v))
+				return v;
+		return "";
+	}
+
+	/** 회원 상태·권한·비밀번호 변경. 자기 자신은 바꿀 수 없다 (관리자가 모두 사라지는 일을 막음) */
+	private void manageMember(HttpServletRequest req, HttpServletResponse resp) throws SQLException, IOException {
+		long no = Web.toInt(req.getParameter("no"), -1);
+		Member target = memberDAO.findByNo(no);
+		if (target == null) {
+			resp.sendError(404, "찾는 회원이 없어요.");
+			return;
+		}
+		String back = "/admin/members/detail?no=" + no;
+		if (no == Web.member(req).getMemberNo() && !req.getServletPath().endsWith("/password")) {
+			Web.flash(req, "내 계정의 상태와 권한은 바꿀 수 없어요");
+			Web.redirect(req, resp, back);
+			return;
+		}
+		switch (req.getServletPath()) {
+		case "/admin/members/status":
+			boolean suspend = "SUSPENDED".equals(req.getParameter("value"));
+			memberDAO.setStatus(no, suspend ? "SUSPENDED" : "ACTIVE");
+			MemberSessions.changed(no);
+			Web.flash(req, suspend ? target.getName() + "님 계정을 정지했어요" : target.getName() + "님 계정 정지를 풀었어요");
+			break;
+		case "/admin/members/role":
+			boolean admin = "ADMIN".equals(req.getParameter("value"));
+			memberDAO.setRole(no, admin ? "ADMIN" : "USER");
+			MemberSessions.changed(no);
+			Web.flash(req, admin ? target.getName() + "님을 관리자로 바꿨어요" : target.getName() + "님을 일반 회원으로 바꿨어요");
+			break;
+		case "/admin/members/password":
+			String temp = memberDAO.resetPassword(no);
+			if (temp == null) {
+				Web.flash(req, "소셜 로그인 회원은 비밀번호가 없어요");
+			} else {
+				req.getSession().setAttribute("tempPassword:" + no, temp);
+				Web.flash(req, "임시 비밀번호를 만들었어요");
+			}
+			break;
+		default:
+			resp.sendError(405);
+			return;
+		}
+		Web.redirect(req, resp, back);
 	}
 
 	@Override
@@ -95,6 +192,11 @@ public class AdminServlet extends HttpServlet {
 				break;
 			case "/admin/coupons":
 				saveCoupon(req, resp);
+				break;
+			case "/admin/members/status":
+			case "/admin/members/role":
+			case "/admin/members/password":
+				manageMember(req, resp);
 				break;
 			default:
 				resp.sendError(405);

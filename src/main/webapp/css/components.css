@@ -553,3 +553,20 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .
 .bar-chart__col.is-empty .bar-chart__bar { background: var(--line); }
 .bar-chart__val { font-size: 11px; line-height: 14px; font-weight: 600; color: var(--text); white-space: nowrap; }
 .bar-chart__label { font-size: 11px; line-height: 14px; color: var(--text-2); }
+
+/* ---------- 관리자: 회원 관리 ---------- */
+.member-strip { display: flex; align-items: center; gap: var(--sp-3); margin-top: var(--sp-3); text-decoration: none; color: inherit; }
+.member-strip__icon { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: var(--primary-weak); color: var(--primary-strong); flex: none; }
+.member-strip__body { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.member-strip__body strong { color: var(--text-strong); }
+.member-strip__go { display: inline-flex; align-items: center; gap: 2px; color: var(--primary-strong); white-space: nowrap; }
+.member-filter { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); }
+.member-filter__q { grid-column: 1 / -1; }
+.member-filter .input, .member-filter .select { width: 100%; }
+.member-filter .select { padding-right: 36px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23697383' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+.member-filter .btn { grid-column: 1 / -1; }
+.member-detail { display: grid; gap: var(--sp-3); }
+.manage-row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: 14px 0; border-top: 1px solid var(--line-weak); }
+.manage-list form:first-child .manage-row { border-top: 0; padding-top: 0; }
+.manage-row .btn { flex: none; }
+.temp-pw { font-size: 16px; letter-spacing: .06em; color: var(--text-strong); user-select: all; }

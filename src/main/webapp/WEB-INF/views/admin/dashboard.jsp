@@ -29,6 +29,15 @@
   </div>
 </div>
 
+<a class="card member-strip" href="${ctx}/admin/members" aria-label="회원 관리로 가기">
+  <span class="member-strip__icon"><ui:icon name="users" /></span>
+  <span class="member-strip__body">
+    <span class="t-label">회원</span>
+    <span class="t-help">전체 <strong class="num">${memberTotal}</strong>명 · 오늘 가입 <strong class="num">${memberToday}</strong>명 · 정지 <strong class="num">${memberSuspended}</strong>명</span>
+  </span>
+  <span class="t-help member-strip__go">회원 관리<ui:icon name="chevron-right" cls="icon-sm" /></span>
+</a>
+
 <section class="card" style="margin-top:20px" aria-labelledby="week-title">
   <div class="row-between">
     <h2 class="t-title2" id="week-title">최근 7일 매출</h2>

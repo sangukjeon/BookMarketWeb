@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpSession;
 /** 서블릿에서 자주 쓰는 일을 모은 도우미 */
 public final class Web {
 	public static final String LOGIN = "loginMember";
+	public static final String LOGIN_STAMP = "loginStamp";
 	public static final String CART = "cart";
 	public static final String FLASH = "flash";
 
@@ -54,6 +55,7 @@ public final class Web {
 		m.setPasswordHash(null);
 		m.setSalt(null);
 		req.getSession().setAttribute(LOGIN, m);
+		req.getSession().setAttribute(LOGIN_STAMP, MemberSessions.stamp());
 	}
 
 	/** 로그인 뒤 돌아갈 주소. 다른 사이트로 보내지 않도록 우리 경로만 허용 */

@@ -25,6 +25,17 @@ public final class PasswordUtil {
 		return Base64.getEncoder().encodeToString(salt);
 	}
 
+	/** 관리자 비밀번호 초기화용 임시 비밀번호: 헷갈리는 글자(0·O·1·l·I)를 뺀 영문 6자 + 숫자 4자 */
+	public static String tempPassword() {
+		String letters = "abcdefghjkmnpqrstuvwxyz", digits = "23456789";
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < 6; i++)
+			sb.append(letters.charAt(RANDOM.nextInt(letters.length())));
+		for (int i = 0; i < 4; i++)
+			sb.append(digits.charAt(RANDOM.nextInt(digits.length())));
+		return sb.toString();
+	}
+
 	public static String hash(String password, String salt) {
 		try {
 			MessageDigest md = MessageDigest.getInstance("SHA-256");

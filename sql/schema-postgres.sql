@@ -20,6 +20,7 @@ CREATE TABLE member (
   provider      VARCHAR(10)  NOT NULL DEFAULT 'LOCAL',   -- LOCAL / GOOGLE / NAVER / KAKAO
   provider_id   VARCHAR(100) NULL,
   role          VARCHAR(10)  NOT NULL DEFAULT 'USER',    -- USER / ADMIN
+  status        VARCHAR(10)  NOT NULL DEFAULT 'ACTIVE',  -- ACTIVE / SUSPENDED (정지되면 로그인 불가)
   created_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT uk_member_login UNIQUE (login_id),
   CONSTRAINT uk_member_social UNIQUE (provider, provider_id)

@@ -60,6 +60,11 @@ public class AuthServlet extends HttpServlet {
 					Web.render(req, resp, "login");
 					return;
 				}
+				if (m.isSuspended()) {
+					req.setAttribute("error", "이용이 정지된 계정이에요. 관리자에게 문의해 주세요.");
+					Web.render(req, resp, "login");
+					return;
+				}
 				Web.login(req, m);
 				Web.flash(req, m.getName() + "님, 반가워요");
 				Web.redirect(req, resp, m.isAdmin() && next.equals("/books") ? "/admin" : next);

@@ -4,6 +4,12 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.market.dto.Member;
 import com.market.util.DBUtil;
@@ -25,6 +31,9 @@ public class MemberDAO {
 		m.setProvider(rs.getString("provider"));
 		m.setProviderId(rs.getString("provider_id"));
 		m.setRole(rs.getString("role"));
+		m.setStatus(rs.getString("status"));
+		Timestamp t = rs.getTimestamp("created_at");
+		m.setCreatedAt(t == null ? null : t.toLocalDateTime());
 		return m;
 	}
 
@@ -86,7 +95,7 @@ public class MemberDAO {
 
 	private void insert(Member m) throws SQLException {
 		try (Connection con = DBUtil.getConnection(); PreparedStatement ps = con.prepareStatement(
-				"INSERT INTO member (login_id, password_hash, salt, name, phone, address, email, provider, provider_id, role) VALUES (?,?,?,?,?,?,?,?,?,?)",
+				"INSERT INTO member (login_id, password_hash, salt, name, phone, address, email, provider, provider_id, role, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
 				new String[] { "member_no" })) { // MySQL·PostgreSQL 모두 자동 번호를 돌려받는다
 			ps.setString(1, m.getLoginId());
 			ps.setString(2, m.getPasswordHash());
@@ -98,6 +107,8 @@ public class MemberDAO {
 			ps.setString(8, m.getProvider());
 			ps.setString(9, m.getProviderId());
 			ps.setString(10, m.getRole());
+			m.setCreatedAt(now()); // DB 서버 시간대와 상관없이 한국 시간으로
+			ps.setTimestamp(11, Timestamp.valueOf(m.getCreatedAt()));
 			ps.executeUpdate();
 			try (ResultSet rs = ps.getGeneratedKeys()) {
 				if (rs.next())
@@ -114,6 +125,97 @@ public class MemberDAO {
 			ps.setString(3, m.getAddress());
 			ps.setLong(4, m.getMemberNo());
 			ps.executeUpdate();
+		}
+	}
+
+	private static LocalDateTime now() {
+		return LocalDateTime.now(ZoneId.of("Asia/Seoul")).withNano(0);
+	}
+
+	// ===================== 관리자: 회원 관리 =====================
+
+	/** 회원 목록 + 회원별 주문 수·구매액(취소되지 않은 주문). 빈 값인 조건은 무시한다 */
+	public List<Member> search(String q, String provider, String role, String status) throws SQLException {
+		StringBuilder sql = new StringBuilder("SELECT m.*,"
+				+ " (SELECT COUNT(*) FROM orders o WHERE o.member_no = m.member_no AND o.status <> 'CANCELLED') AS order_count,"
+				+ " (SELECT COALESCE(SUM(o.pay_amount), 0) FROM orders o WHERE o.member_no = m.member_no AND o.status <> 'CANCELLED') AS total_spent"
+				+ " FROM member m WHERE 1 = 1");
+		List<Object> params = new ArrayList<>();
+		if (q != null && !q.isBlank()) {
+			sql.append(" AND (LOWER(m.name) LIKE ? OR LOWER(m.login_id) LIKE ? OR LOWER(m.email) LIKE ?)");
+			String like = "%" + q.trim().toLowerCase() + "%";
+			params.add(like);
+			params.add(like);
+			params.add(like);
+		}
+		if (provider != null && !provider.isBlank()) {
+			sql.append(" AND m.provider = ?");
+			params.add(provider);
+		}
+		if (role != null && !role.isBlank()) {
+			sql.append(" AND m.role = ?");
+			params.add(role);
+		}
+		if (status != null && !status.isBlank()) {
+			sql.append(" AND m.status = ?");
+			params.add(status);
+		}
+		sql.append(" ORDER BY m.member_no DESC");
+		List<Member> list = new ArrayList<>();
+		try (Connection con = DBUtil.getConnection(); PreparedStatement ps = con.prepareStatement(sql.toString())) {
+			for (int i = 0; i < params.size(); i++)
+				ps.setObject(i + 1, params.get(i));
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					Member m = map(rs);
+					m.setOrderCount(rs.getInt("order_count"));
+					m.setTotalSpent(rs.getLong("total_spent"));
+					list.add(m);
+				}
+			}
+		}
+		return list;
+	}
+
+	/** 관리자 대시보드용 숫자: [전체 회원, 오늘 가입, 정지] */
+	public int[] counts() throws SQLException {
+		Timestamp today = Timestamp.valueOf(LocalDate.now(ZoneId.of("Asia/Seoul")).atStartOfDay());
+		try (Connection con = DBUtil.getConnection(); PreparedStatement ps = con.prepareStatement(
+				"SELECT COUNT(*) AS total,"
+						+ " COALESCE(SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END), 0) AS today,"
+						+ " COALESCE(SUM(CASE WHEN status = 'SUSPENDED' THEN 1 ELSE 0 END), 0) AS suspended FROM member")) {
+			ps.setTimestamp(1, today);
+			try (ResultSet rs = ps.executeQuery()) {
+				rs.next();
+				return new int[] { rs.getInt("total"), rs.getInt("today"), rs.getInt("suspended") };
+			}
+		}
+	}
+
+	/** 계정 정지(SUSPENDED) / 해제(ACTIVE). 바뀌었으면 true */
+	public boolean setStatus(long memberNo, String status) throws SQLException {
+		return update("UPDATE member SET status = ? WHERE member_no = ? AND status <> ?", status, memberNo, status);
+	}
+
+	/** 권한 변경 USER / ADMIN. 바뀌었으면 true */
+	public boolean setRole(long memberNo, String role) throws SQLException {
+		return update("UPDATE member SET role = ? WHERE member_no = ? AND role <> ?", role, memberNo, role);
+	}
+
+	/** 자체 가입 회원의 비밀번호를 임시 비밀번호로 바꾸고 돌려준다. 소셜 회원이면 null */
+	public String resetPassword(long memberNo) throws SQLException {
+		String temp = PasswordUtil.tempPassword();
+		String salt = PasswordUtil.newSalt();
+		boolean ok = update("UPDATE member SET password_hash = ?, salt = ? WHERE member_no = ? AND provider = 'LOCAL'",
+				PasswordUtil.hash(temp, salt), salt, memberNo);
+		return ok ? temp : null;
+	}
+
+	private boolean update(String sql, Object... params) throws SQLException {
+		try (Connection con = DBUtil.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+			for (int i = 0; i < params.length; i++)
+				ps.setObject(i + 1, params[i]);
+			return ps.executeUpdate() > 0;
 		}
 	}
 }

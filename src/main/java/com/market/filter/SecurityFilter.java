@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Base64;
 
+import com.market.dao.MemberDAO;
 import com.market.dto.Member;
+import com.market.util.MemberSessions;
 import com.market.util.Web;
 
 import jakarta.servlet.Filter;
@@ -48,6 +50,14 @@ public class SecurityFilter implements Filter {
 		}
 
 		Member m = Web.member(req);
+		if (m != null) {
+			Object stamp = session.getAttribute(Web.LOGIN_STAMP);
+			if (MemberSessions.isStale(m.getMemberNo(), stamp instanceof Long l ? l : 0L)) {
+				m = refresh(req, resp, session, m);
+				if (m == null)
+					return;
+			}
+		}
 		boolean needLogin = path.startsWith("/order") || path.startsWith("/mypage") || path.startsWith("/admin")
 				|| path.startsWith("/wishlist") || path.startsWith("/books/review");
 		if (needLogin && m == null) {
@@ -66,5 +76,30 @@ public class SecurityFilter implements Filter {
 			return;
 		}
 		chain.doFilter(req, resp);
+	}
+
+	/**
+	 * 관리자가 이 회원의 상태·권한을 바꾼 뒤 처음 들어온 요청: DB에서 다시 읽는다.
+	 * 정지됐으면 로그아웃시키고 로그인 화면으로 보낸 뒤 null을 돌려준다.
+	 */
+	private Member refresh(HttpServletRequest req, HttpServletResponse resp, HttpSession session, Member old)
+			throws IOException, ServletException {
+		Member fresh;
+		try {
+			fresh = new MemberDAO().findByNo(old.getMemberNo());
+		} catch (java.sql.SQLException e) {
+			throw new ServletException(e);
+		}
+		if (fresh == null || fresh.isSuspended()) {
+			session.invalidate();
+			Web.flash(req, "이용이 정지된 계정이라 로그아웃됐어요. 관리자에게 문의해 주세요.");
+			resp.sendRedirect(req.getContextPath() + "/login");
+			return null;
+		}
+		fresh.setPasswordHash(null);
+		fresh.setSalt(null);
+		session.setAttribute(Web.LOGIN, fresh);
+		session.setAttribute(Web.LOGIN_STAMP, MemberSessions.stamp());
+		return fresh;
 	}
 }
