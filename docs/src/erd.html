@@ -35,9 +35,11 @@ svg.lines{position:absolute;inset:0;pointer-events:none}
 <tr><td>shipping_fee</td><td class="t">INT</td></tr>
 <tr><td>pay_amount</td><td class="t">INT</td></tr>
 <tr><td><span class="k fk">FK</span> coupon_code</td><td class="t">→ coupon, NULL</td></tr>
-<tr><td>status</td><td class="t">ORDERED / CANCELLED</td></tr>
+<tr><td>status</td><td class="t">배송 4단계 / CANCELLED</td></tr>
 <tr><td>ordered_at</td><td class="t">DATETIME</td></tr>
-<tr><td>cancelled_at</td><td class="t">DATETIME NULL</td></tr></table></div>
+<tr><td>cancelled_at</td><td class="t">DATETIME NULL</td></tr>
+<tr><td>shipped_at</td><td class="t">DATETIME NULL</td></tr>
+<tr><td>delivered_at</td><td class="t">DATETIME NULL</td></tr></table></div>
 
 <div class="box" style="left:1152px;top:140px"><h3>coupon <small>쿠폰</small></h3><table>
 <tr><td><span class="k pk">PK</span> code</td><td class="t">VARCHAR(20)</td></tr>
@@ -85,7 +87,7 @@ svg.lines{position:absolute;inset:0;pointer-events:none}
 <defs><marker id="m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="#2B6BF3"/></marker></defs>
 <g stroke="#2B6BF3" stroke-width="2" fill="none" marker-end="url(#m)">
 <path d="M448 260 H598"/><path d="M1150 250 H1004"/>
-<path d="M800 551 V758"/><path d="M1150 800 H1004"/>
+<path d="M800 607 V758"/><path d="M1150 800 H1004"/>
 <path d="M248 551 V758"/>
 <path d="M46 420 H24 V1060 H46"/>
 <path d="M1352 827 V1210 H525 V1060 H452"/>

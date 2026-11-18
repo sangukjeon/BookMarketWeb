@@ -37,6 +37,8 @@
 | <img src="docs/screens/pc-search.png" alt="검색"> | <img src="docs/screens/pc-detail.png" alt="상세"> |
 | **장바구니** | **주문 내역** |
 | <img src="docs/screens/pc-cart.png" alt="장바구니"> | <img src="docs/screens/pc-orders.png" alt="주문 내역"> |
+| **영수증 · 배송 진행** | **별점 리뷰 쓰기** |
+| <img src="docs/screens/pc-receipt-shipping.png" alt="영수증 배송 진행 막대"> | <img src="docs/screens/pc-review-stars.png" alt="별점 입력"> |
 | **로그인 (자체 + 소셜)** | **마이페이지** |
 | <img src="docs/screens/pc-login.png" alt="로그인"> | <img src="docs/screens/pc-mypage.png" alt="마이페이지"> |
 | **관리자 · 매출 요약** | **관리자 · 주문 관리** |
@@ -57,12 +59,13 @@
 **도서**
 - 카카오 책 검색(정확도순·최신순), 베스트셀러(북마켓 판매량순)·신간 탭, 페이지 나누기
 - 검색으로 본 책은 `book` 테이블에 자동 저장 → 장바구니·주문·찜·리뷰에 그대로 사용
-- 찜, 별점 리뷰(**구매한 회원만**, 1인 1개), 최근 본 책 5권
+- 찜, 별점 리뷰(**구매한 회원만**, 1인 1개, 별 5개를 눌러 고르고 점수 표시), 최근 본 책 5권
 
 **장바구니 · 주문**
 - 수량 − / + (원본에서 **비어 있던 버튼을 구현**), 배송비 자동 계산 (3만 원 이상 무료)
 - 주문서: 회원 정보 불러오기, **쿠폰 적용(회원당 1회)**, 결제 금액 요약
 - 영수증 DB 저장·다시 보기·인쇄, **주문 취소** (취소하면 쿠폰 다시 사용 가능)
+- **배송 단계**: 주문완료 → 배송 준비 중 → 배송 중 → 배송 완료. 영수증에 진행 막대, **배송이 시작되면 취소 불가**
 
 **회원**
 - 자체 회원가입·로그인 — **비밀번호 SHA-256 + salt 10,000회 암호화**
@@ -71,7 +74,8 @@
 
 **관리자** (`admin` / `admin1234`)
 - 매출 요약: 오늘·전체 매출, 주문 수, 취소율, **최근 7일 매출 그래프**, 많이 팔린 책 TOP 5
-- 주문 관리(상태 필터·취소), 도서 등록·수정·삭제, 쿠폰 관리
+- 주문 관리: 상태별 칩(건수), **한 단계씩 배송 진행**(배송 준비하기 → 배송 시작하기 → 배송 완료하기), 배송 전 주문만 취소
+- 도서 등록·수정·삭제, 쿠폰 관리
 - **회원 관리**: 이름·아이디·이메일 검색, 가입 방식·권한·상태 필터, 회원별 주문 수·구매액, 회원 상세(정보 + 주문 내역)
   - **계정 정지 / 해제** — 정지하면 로그인할 수 없고, 이미 로그인해 있던 회원도 다음 요청에서 바로 로그아웃
   - **권한 변경** (일반 ↔ 관리자) — 다시 로그인하지 않아도 바로 반영. 내 계정은 바꿀 수 없음
@@ -105,7 +109,7 @@
 | CartAddItemPage | `/books` `/books/detail` | **카카오 책 검색 API**, 베스트셀러·신간, 찜, 리뷰, 최근 본 책 |
 | **bt5 "항목수량 줄이기" (기능 없음)** | `/cart` | **수량 − / + 구현**, 1 아래로는 안 내려감 |
 | CartShippingPage | `/order` | 회원 정보 불러오기, **쿠폰 적용**, 배송비 계산 |
-| CartOrderBillPage | `/orders/receipt` `/orders` | 영수증 DB 저장, 다시 보기·인쇄, **주문 취소** |
+| CartOrderBillPage | `/orders/receipt` `/orders` | 영수증 DB 저장, 다시 보기·인쇄, **주문 취소**, 배송 진행 막대 |
 | AdminPage (도서 추가) | `/admin/*` | 매출 요약, 주문 관리, 도서·쿠폰·회원 관리 |
 | BookInIt (`book.txt`) | `BookDAO` + `book` 테이블 | JDBC, 파일 끝 빈 줄로 책이 중복되던 버그 해결 |
 | `Cart.mCartCount` (static) | 세션별 `Cart` | static이 모든 사용자에게 공유되는 문제 제거 |
@@ -126,7 +130,7 @@
 3. **DB 만들기**
    - Supabase: SQL Editor에서 [`sql/schema-postgres.sql`](sql/schema-postgres.sql) 실행
    - MySQL: Workbench에서 [`sql/schema.sql`](sql/schema.sql) 실행
-   - 이미 쓰던 DB라면 데이터를 지우지 않도록 [`sql/migrate-member-status.sql`](sql/migrate-member-status.sql)만 실행 (회원 관리 기능용 컬럼 1개 추가)
+   - 이미 쓰던 DB라면 데이터를 지우지 않도록 추가용 SQL만 실행: [`migrate-member-status.sql`](sql/migrate-member-status.sql)(회원 관리) → [`migrate-shipping.sql`](sql/migrate-shipping.sql)(배송 단계)
 4. **실행** — `Servers` 탭 → Tomcat v10.1에 `BookMarketWeb` 추가 → Start → http://localhost:8080/BookMarketWeb
 
 | 테스트 계정 · 쿠폰 | |
@@ -198,6 +202,8 @@ mysql -u root -p --default-character-set=utf8mb4 < sql\schema.sql
 | 설정을 고쳤는데 그대로임 | Eclipse가 `build/classes`의 예전 복사본을 씀 → 프로젝트 Refresh(F5) → `Project > Clean` → 톰캣 Clean → Restart |
 | `Unknown column 'status'` 등 | 최신 `schema.sql` / `schema-postgres.sql` 다시 실행 (데이터가 지워져요) |
 | 회원 관리 화면에서 `column "status" does not exist` / `Unknown column 'status'` | 기존 데이터를 지키려면 [`sql/migrate-member-status.sql`](sql/migrate-member-status.sql) 한 줄만 실행 |
+| 주문 화면에서 `column "shipped_at" does not exist` / `Unknown column 'shipped_at'` | [`sql/migrate-shipping.sql`](sql/migrate-shipping.sql) 두 줄 실행 |
+| 별점 별이 안 보이거나 모양이 깨짐 | 예전 CSS가 캐시된 것 → 브라우저에서 Ctrl+F5 (강력 새로 고침) |
 | `relation "book" does not exist` | Supabase SQL Editor에서 `schema-postgres.sql`을 실행했는지 확인 |
 | Supabase `password authentication failed` | 사용자 이름이 `postgres.프로젝트ID` 통째인지, 비밀번호가 Database Password인지 확인 |
 | Supabase 연결 시간 초과 | Session pooler 호스트·포트 5432인지 확인. 학교 와이파이가 막으면 휴대폰 테더링으로 확인 |
@@ -229,14 +235,14 @@ src/main/webapp/
   css/          tokens · base · components · pc(1024px 이상)
   js/           theme(다크 모드) · ui(토스트 · 시트 · 확인 모달)
   WEB-INF/views JSP 화면 (common/ 공통 조각, admin/ 관리자)
-sql/            schema.sql (MySQL), schema-postgres.sql (Supabase), migrate-member-status.sql (기존 DB에 회원 상태 추가)
-tests/          HTTP 종단 테스트 — 기본 63개 + 회원 관리 33개 + 카카오 검색 13개
+sql/            schema.sql (MySQL), schema-postgres.sql (Supabase), migrate-*.sql (기존 DB에 컬럼만 추가)
+tests/          HTTP 종단 테스트 — 기본 63개 + 회원 관리 33개 + 배송·별점 24개 + 카카오 검색 13개
 docs/           DESIGN.md, architecture.png, erd.png, screens/
 ```
 
 ## 테스트
 
-DB 초기화 → 톰캣 실행 → `python tests/e2e.py` (63개) → `python tests/e2e_members.py` (회원 관리 33개). 카카오 검색은 가짜 서버로 `tests/e2e_kakao.py` (13개). 자세한 방법은 [`tests/README.md`](tests/README.md).
+DB 초기화 → 톰캣 실행 → `python tests/e2e.py` (63개) → `python tests/e2e_members.py` (회원 관리 33개) → `python tests/e2e_shipping.py` (배송·별점 24개). 카카오 검색은 가짜 서버로 `tests/e2e_kakao.py` (13개). 자세한 방법은 [`tests/README.md`](tests/README.md).
 
 <details>
 <summary><b>소셜 로그인을 실제로 바꾸려면</b></summary>

@@ -45,7 +45,7 @@ src/main/webapp/
   images/icons.svg Lucide 아이콘 스프라이트
 sql/schema.sql     DB 전체 생성 (DROP 후 다시 만듦 → 실행하면 데이터 초기화)
 sql/schema-postgres.sql  Supabase(PostgreSQL)용. SQL Editor에서 실행. RLS를 켜서 REST API 접근을 막음
-sql/migrate-member-status.sql  기존 DB에 member.status 추가 (데이터 유지)
+sql/migrate-member-status.sql, migrate-shipping.sql  기존 DB에 컬럼만 추가 (데이터 유지)
 tests/             HTTP 종단 테스트 (tests/README.md)
 docs/              DESIGN.md, erd.png, architecture.png, screens/, src/(다이어그램 HTML 원본)
 ```
@@ -60,7 +60,7 @@ docs/              DESIGN.md, erd.png, architecture.png, screens/, src/(다이�
   ```
   (macOS/Linux는 클래스패스 구분자가 `;` 대신 `:`)
   배포는 `src/main/webapp` 전체 + `build/classes` + `db.properties`, `api.properties`를 `<톰캣>/webapps/BookMarketWeb/`(`WEB-INF/classes`)에 복사.
-- **테스트:** DB 초기화 → 톰캣 실행 → `python tests/e2e.py` (63개) → `python tests/e2e_members.py` (회원 관리 33개). 카카오 검색은 `tests/fake_kakao.py` + `tests/e2e_kakao.py` (13개, tests/README.md).
+- **테스트:** DB 초기화 → 톰캣 실행 → `python tests/e2e.py` (63개) → `python tests/e2e_members.py` (회원 관리 33개) → `python tests/e2e_shipping.py` (배송·별점 24개). 카카오 검색은 `tests/fake_kakao.py` + `tests/e2e_kakao.py` (13개, tests/README.md).
 
 ## 꼭 지킬 것 (실제로 겪은 함정)
 - **JSTL URI**는 `http://java.sun.com/jsp/jstl/core` 형식. `jakarta.tags.core`는 이 jar에서 동작하지 않는다.
@@ -74,10 +74,15 @@ docs/              DESIGN.md, erd.png, architecture.png, screens/, src/(다이�
 - 아이콘 추가: Lucide SVG의 내용을 `images/icons.svg`에 `<symbol id="i-이름" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">`로 넣는다. **symbol에 `fill="none"`을 넣지 않는다** (CSS `.icon{fill:none}`이 기본값이고, 채운 하트·별은 CSS로 `fill: currentColor`).
 - 이모지 금지, 아이콘은 Lucide만. 파란 채움 버튼(`.btn-main`)은 한 화면에 하나. 비활성은 투명도 대신 색 교체.
 - 되돌릴 수 없는 POST(삭제·취소)는 폼에 `data-confirm="질문"` → ui.js가 확인 모달을 띄운다.
+- **EL 두 개를 공백으로 이어 붙이면 공백이 사라질 수 있다** (`class="${a ? 'x' : ''} ${b ? 'y' : ''}"` → `xy`). 공백은 따옴표 안에 넣는다: `${a ? 'x' : ''}${b ? ' y' : ''}`. 태그 사이 공백만 있는 텍스트도 마찬가지 (`<span> 외 1종</span>`처럼 안에 넣기).
+- 별점 입력은 `fieldset.star-field` 안의 `div.star-input`에서 flex를 건다 (fieldset 자체에 flex를 걸면 브라우저마다 다르게 그림).
 
 ## 데이터 규칙
 - `book.source`: `LOCAL`(관리자 등록) / `KAKAO`(검색 결과로 보일 때 자동 저장, 예전 `ALADIN` 행이 남아 있을 수 있음). API 갱신은 `LOCAL`이 아닌 행만 덮어쓴다. 카카오는 분야(category)를 주지 않는다.
-- `orders.status`: 현재 `ORDERED` / `CANCELLED`. 매출·판매량·리뷰 자격·쿠폰 사용 여부는 **취소되지 않은 주문만** 센다.
+- `orders.status`: `ORDERED`(주문완료) → `PREPARING`(배송 준비 중) → `SHIPPING`(배송 중, `shipped_at`) → `DELIVERED`(배송 완료, `delivered_at`), 그리고 `CANCELLED`.
+  - 관리자만 한 단계씩 앞으로 (`OrderDAO.advance(id, from)` = `UPDATE … WHERE status = from`, 두 번 눌러도 한 번만). 순서·이름은 `Order.FLOW`/`labelOf`/`getStatusPill` 한 곳에서 관리.
+  - 취소는 `ORDERED`·`PREPARING`에서만 (회원·관리자 모두, `Order.isCancellable`).
+  - 매출·판매량·리뷰 자격·쿠폰 사용 여부는 **`status <> 'CANCELLED'`** 로 센다 (`= 'ORDERED'`로 쓰지 않는다).
 - 쿠폰: 회원당 1회 (`OrderDAO.hasUsedCoupon`), 그 주문을 취소하면 다시 쓸 수 있다.
 - 리뷰: 그 책을 산(취소 안 된) 회원만, 책 1권에 1개 (`uk_review_once`).
 - `member.status`: `ACTIVE` / `SUSPENDED`. 정지 회원은 자체·소셜 로그인 모두 막고(비밀번호가 맞을 때만 "정지" 안내), 로그인 중이면 `SecurityFilter`가 다음 요청에서 로그아웃시킨다. 관리자가 회원 상태·권한을 바꾸면 반드시 `MemberSessions.changed(memberNo)`를 부른다.
@@ -90,7 +95,7 @@ docs/              DESIGN.md, erd.png, architecture.png, screens/, src/(다이�
    - `/coupons` (로그인 필요): 쿠폰 번호 입력 → 등록, 내 쿠폰 목록(상태: 사용 가능 / 사용함 / 멈춤).
    - 주문서 쿠폰은 **내 쿠폰함에 등록한 것만** 선택 가능 (직접 입력 칸 → 내 쿠폰 선택으로 변경).
    - 회원가입(자체·소셜 첫 로그인) 때 `WELCOME10` 자동 등록. 관리자 쿠폰 화면에 "등록 회원 수 / 사용 횟수".
-2. **배송 단계와 취소 제한**
+2. ~~배송 단계와 취소 제한~~ **완료 (2026-11-18)** — 아래는 당시 계획 기록
    - `orders.status`: `ORDERED`(주문완료) → `PREPARING`(배송 준비 중) → `SHIPPING`(배송 중) → `DELIVERED`(배송 완료), 그리고 `CANCELLED`. 컬럼 `shipped_at`, `delivered_at` 추가.
    - 관리자 주문 관리에서 한 단계씩 앞으로만 변경 (UPDATE … WHERE status = 이전 상태).
    - **취소는 ORDERED·PREPARING에서만** (회원·관리자 모두). `OrderDAO.cancel`의 WHERE를 `status IN ('ORDERED','PREPARING')`로. 화면에는 배송 진행 막대와 "배송이 시작돼서 취소할 수 없어요" 안내.
