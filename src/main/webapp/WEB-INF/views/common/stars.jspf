@@ -1,0 +1,1 @@
+<span class="stars" role="img" aria-label="별점 5점 중 ${starValue}점"><c:forEach begin="1" end="5" var="si"><svg class="icon icon-sm ${si <= starValue + 0.5 ? 'on' : ''}" aria-hidden="true"><use href="${ctx}/images/icons.svg#i-star"/></svg></c:forEach></span>

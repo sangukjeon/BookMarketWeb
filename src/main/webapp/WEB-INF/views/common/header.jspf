@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title><c:out value="${title}" /> | 북마켓</title>
+<script>
+  try {
+    var t = localStorage.getItem('theme')
+    if (t === 'dark' || (!t && matchMedia('(prefers-color-scheme: dark)').matches))
+      document.documentElement.dataset.theme = 'dark'
+  } catch (e) {}
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+<link rel="stylesheet" href="${ctx}/css/tokens.css">
+<link rel="stylesheet" href="${ctx}/css/base.css">
+<link rel="stylesheet" href="${ctx}/css/components.css">
+<link rel="stylesheet" href="${ctx}/css/pc.css">
+<link rel="icon" href="data:,">
+</head>
+<body class="${plate ? 'has-plate' : ''}">
+<a class="skip-link" href="#main">본문으로 건너뛰기</a>
+
+<header class="topbar">
+  <div class="container ${containerCls == 'container--wide' ? 'container--wide' : ''}">
+    <a class="logo" href="${ctx}/books" aria-label="북마켓 처음으로">
+      <span class="logo__name">북마켓</span><span class="logo__sub">온라인 서점</span>
+    </a>
+    <nav class="topbar__links" aria-label="주 메뉴">
+      <a href="${ctx}/books" ${nav == 'books' and tab != 'new' ? 'aria-current="page"' : ''}>베스트셀러</a>
+      <a href="${ctx}/books?tab=new" ${nav == 'books' and tab == 'new' ? 'aria-current="page"' : ''}>신간</a>
+      <a href="${ctx}/orders" ${nav == 'orders' ? 'aria-current="page"' : ''}>주문 내역</a>
+      <c:if test="${me.admin}"><a href="${ctx}/admin" ${nav == 'admin' ? 'aria-current="page"' : ''}>관리자</a></c:if>
+    </nav>
+    <form class="topbar__search search" role="search" method="get" action="${ctx}/books">
+      <ui:icon name="search" />
+      <label class="sr-only" for="top-q">도서명, 저자, 출판사로 찾기</label>
+      <input class="input" id="top-q" name="q" type="search" value="<c:out value='${q}'/>" placeholder="도서명, 저자, 출판사로 찾기" enterkeyhint="search">
+    </form>
+    <div class="topbar__right">
+      <button type="button" class="icon-btn" data-theme-toggle data-sprite="${ctx}/images/icons.svg" aria-label="화면 테마 바꾸기">
+        <svg class="icon" aria-hidden="true"><use href="${ctx}/images/icons.svg#i-moon"/></svg>
+      </button>
+      <a class="icon-btn pc-only" href="${ctx}/wishlist" aria-label="찜한 책" ${nav == 'wishlist' ? 'aria-current="page"' : ''}><ui:icon name="heart" /></a>
+      <a class="icon-btn" href="${ctx}/cart" aria-label="장바구니, ${cartCount}권 담김" ${nav == 'cart' ? 'aria-current="page"' : ''}>
+        <ui:icon name="shopping-cart" />
+        <c:if test="${cartCount > 0}"><span class="badge" aria-hidden="true">${cartCount > 99 ? '99+' : cartCount}</span></c:if>
+      </a>
+      <c:choose>
+        <c:when test="${empty me}">
+          <a class="btn btn-sub btn-s topbar__login" href="${ctx}/login">로그인</a>
+        </c:when>
+        <c:otherwise>
+          <a class="topbar__me topbar__login" href="${ctx}/mypage" ${nav == 'mypage' ? 'aria-current="page"' : ''}>
+            <span class="avatar" aria-hidden="true">${fn:escapeXml(fn:substring(me.name, 0, 1))}</span><span class="topbar__me-name"><c:out value="${me.name}" />님</span>
+          </a>
+        </c:otherwise>
+      </c:choose>
+      <button type="button" class="icon-btn topbar__menu" data-sheet-open="menu-sheet" aria-expanded="false" aria-controls="menu-sheet" aria-label="메뉴 열기">
+        <ui:icon name="menu" />
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main" tabindex="-1">
+<div class="container ${containerCls}">

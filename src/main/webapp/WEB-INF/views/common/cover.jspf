@@ -1,0 +1,5 @@
+<c:choose>
+  <c:when test="${coverBook.remoteImage}"><img src="<c:out value='${coverBook.image}'/>" alt="" loading="lazy" referrerpolicy="no-referrer"></c:when>
+  <c:when test="${not empty coverBook.image}"><img src="${ctx}/images/books/<c:out value='${coverBook.image}'/>" alt="" loading="lazy"></c:when>
+  <c:otherwise><ui:icon name="book-open" /></c:otherwise>
+</c:choose>

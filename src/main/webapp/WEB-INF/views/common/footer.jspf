@@ -1,0 +1,68 @@
+</div>
+</main>
+
+<footer class="footer">
+  <div class="container ${containerCls}">
+    <div class="footer__cols pc-only">
+      <div class="footer__brand">
+        <span class="logo__name">북마켓</span>
+        <p>교재 BookMarketSwing을 톰캣 웹으로 옮긴 연습용 온라인 서점이에요.<br>실제 결제는 일어나지 않아요.</p>
+      </div>
+      <nav aria-label="쇼핑">
+        <h2>쇼핑</h2>
+        <a href="${ctx}/books">베스트셀러</a><a href="${ctx}/books?tab=new">신간</a><a href="${ctx}/cart">장바구니</a>
+      </nav>
+      <nav aria-label="내 계정">
+        <h2>내 계정</h2>
+        <a href="${ctx}/orders">주문 내역</a><a href="${ctx}/wishlist">찜한 책</a><a href="${ctx}/mypage">내 정보</a>
+      </nav>
+      <div>
+        <h2>프로젝트</h2>
+        <p>웹 프로그래밍 팀 과제<br>Tomcat 10.1 · JSP/Servlet · JDBC<br>도서 검색: 카카오 책 검색 API</p>
+      </div>
+    </div>
+    <p class="m-only">북마켓은 웹 프로그래밍 팀 과제로 만든 연습용 서점이에요. 실제 결제는 일어나지 않아요.</p>
+  </div>
+</footer>
+
+<div class="sheet" id="menu-sheet" role="dialog" aria-modal="true" aria-labelledby="menu-title" aria-hidden="true">
+  <div class="sheet__head">
+    <h2 class="t-title1" id="menu-title">
+      <c:choose>
+        <c:when test="${empty me}">메뉴</c:when>
+        <c:otherwise><c:out value="${me.name}" />님</c:otherwise>
+      </c:choose>
+    </h2>
+    <button type="button" class="icon-btn" data-sheet-close aria-label="메뉴 닫기"><ui:icon name="x" /></button>
+  </div>
+  <nav aria-label="전체 메뉴">
+    <a href="${ctx}/books" ${nav == 'books' ? 'aria-current="page"' : ''}><ui:icon name="library-big" />도서</a>
+    <a href="${ctx}/cart" ${nav == 'cart' ? 'aria-current="page"' : ''}><ui:icon name="shopping-cart" />장바구니<span class="muted num">${cartCount}권</span></a>
+    <a href="${ctx}/orders" ${nav == 'orders' ? 'aria-current="page"' : ''}><ui:icon name="receipt" />주문 내역</a>
+    <a href="${ctx}/wishlist" ${nav == 'wishlist' ? 'aria-current="page"' : ''}><ui:icon name="heart" />찜한 책</a>
+    <a href="${ctx}/mypage" ${nav == 'mypage' ? 'aria-current="page"' : ''}><ui:icon name="user-round" />내 정보</a>
+    <c:if test="${me.admin}"><a href="${ctx}/admin" ${nav == 'admin' ? 'aria-current="page"' : ''}><ui:icon name="settings" />관리자</a></c:if>
+    <c:choose>
+      <c:when test="${empty me}">
+        <a href="${ctx}/login"><ui:icon name="log-in" />로그인</a>
+      </c:when>
+      <c:otherwise>
+        <form method="post" action="${ctx}/logout">
+          <input type="hidden" name="_csrf" value="${sessionScope.csrf}">
+          <button type="submit"><ui:icon name="log-out" />로그아웃</button>
+        </form>
+      </c:otherwise>
+    </c:choose>
+  </nav>
+</div>
+<div class="sheet-dim" aria-hidden="true"></div>
+
+<c:if test="${not empty sessionScope.flash}">
+  <div class="toast" id="toast" role="status"><ui:icon name="circle-check" /><span><c:out value="${sessionScope.flash}" /></span></div>
+  <c:remove var="flash" scope="session" />
+</c:if>
+
+<script src="${ctx}/js/theme.js"></script>
+<script src="${ctx}/js/ui.js"></script>
+</body>
+</html>

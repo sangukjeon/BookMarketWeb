@@ -1,0 +1,155 @@
+/* tokens.css — DESIGN.md와 값이 같아야 한다 */
+:root {
+  color-scheme: light;
+
+  /* 글꼴 */
+  --font: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui,
+    "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+
+  /* 회색 단계 (직접 쓰지 말고 아래 의미 토큰을 쓴다) */
+  --gray-0: #ffffff;
+  --gray-50: #f9f9fb;
+  --gray-100: #f2f3f8;
+  --gray-200: #e5e8ef;
+  --gray-300: #cbd1dc;
+  --gray-400: #b4bbcb;
+  --gray-500: #99a1b1;
+  --gray-600: #697383;
+  --gray-800: #354153;
+  --gray-900: #262f3c;
+  --gray-1000: #141a24;
+
+  /* 바탕·선 */
+  --bg: var(--gray-100);
+  --surface: var(--gray-0);
+  --surface-sub: var(--gray-50);
+  --chip: var(--gray-100);
+  --line: var(--gray-200);
+  --line-weak: var(--gray-100);
+
+  /* 글자 */
+  --text-strong: var(--gray-1000);
+  --text: var(--gray-800);
+  --text-2: var(--gray-600);
+  --text-3: var(--gray-500);
+
+  /* 파랑 */
+  --primary: #2b6bf3;
+  --primary-solid: #2b6bf3;
+  --primary-strong: #1e56d6;
+  --primary-weak: #ebf2ff;
+  --primary-tint: #dce7fd;
+  --on-primary: #ffffff;
+
+  /* 상태 */
+  --success: #2f8a4e;
+  --success-strong: #1f7a47;
+  --success-weak: #eaf6ef;
+  --danger: #e5484d;
+  --danger-strong: #c8333a;
+  --danger-weak: #fdecec;
+  --warn: #f07800;
+  --warn-strong: #8a4300;
+  --warn-weak: #ffefe0;
+
+  /* 카테고리: 바탕 / 아이콘 / 글자 */
+  --cat-tip-bg: #fff5d1;   --cat-tip-icon: #d99a00;   --cat-tip-text: #7a5600;
+  --cat-study-bg: #e5f2fd; --cat-study-icon: #2d8cd6; --cat-study-text: #17507e;
+  --cat-food-bg: #fdeaf0;  --cat-food-icon: #e0577a;  --cat-food-text: #8f2e48;
+  --cat-warn-bg: #ffefe0;  --cat-warn-icon: #f07800;  --cat-warn-text: #8a4300;
+  --cat-class-bg: #eaf6df; --cat-class-icon: #4c9a1a; --cat-class-text: #2f6110;
+  --cat-rules-bg: #eef0ff; --cat-rules-icon: #5b5fd6; --cat-rules-text: #34379a;
+  --cat-etc-bg: #f2f3f8;   --cat-etc-icon: #697383;   --cat-etc-text: #4a5667;
+
+  /* 그 밖 */
+  --dim: rgba(20, 26, 36, 0.44);
+  --pressed: rgba(20, 26, 36, 0.06);
+  --highlight: #fff1b8;
+  --toast-bg: var(--gray-1000);
+
+  /* 간격 */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+
+  /* 모서리 */
+  --r-tag: 6px;
+  --r-xs: 8px;
+  --r-sm: 12px;
+  --r-control: 14px;
+  --r-card: 16px;
+  --r-sheet: 24px;
+  --r-pill: 999px;
+
+  /* 그림자 */
+  --shadow-sm: 0 1px 2px rgba(20, 26, 36, 0.06);
+  --shadow-fab: 0 2px 8px rgba(20, 26, 36, 0.12);
+  --shadow-float: 0 4px 12px rgba(20, 26, 36, 0.16);
+  --shadow-sheet: 0 0 20px rgba(0, 0, 0, 0.18);
+  --shadow-modal: 0 20px 60px rgba(20, 26, 36, 0.24);
+  --ring-current: 0 0 0 3px var(--primary-weak);
+
+  /* 크기 */
+  --bar-h: 52px;
+  --btn-main-h: 56px;
+  --btn-sub-h: 48px;
+  --btn-s-h: 40px;
+  --hit: 44px;
+  --plate-h: calc(var(--btn-main-h) + 2 * var(--sp-3) + 1px);
+
+  /* 움직임 */
+  --ease: cubic-bezier(0.42, 0, 0.58, 1);
+  --dur-press: 100ms;
+  --dur-fast: 150ms;
+  --dur-sheet: 240ms;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #0f131a;
+  --surface: #181d26;
+  --surface-sub: #1e2430;
+  --chip: #222937;
+  --line: #2a3140;
+  --line-weak: #222937;
+
+  --text-strong: #eef1f6;
+  --text: #c9d0db;
+  --text-2: #a3acbb;
+  --text-3: #6f7889;
+
+  --primary: #4b83f7;
+  --primary-solid: #2b6bf3; /* 흰 글자 대비 4.67:1 유지 */
+  --primary-strong: #8fb1ff;
+  --primary-weak: #1b2a4a;
+  --primary-tint: #22365e;
+
+  --success: #4fb872;
+  --success-strong: #7fd39b;
+  --success-weak: #17301f;
+  --danger: #ff6b6f;
+  --danger-strong: #ff9ea1;
+  --danger-weak: #3a1d20;
+  --warn: #ffa14a;
+  --warn-strong: #ffbe80;
+  --warn-weak: #3a2814;
+
+  --cat-tip-bg: #3f361e;   --cat-tip-icon: #e1ae33;   --cat-tip-text: #eed28c;
+  --cat-study-bg: #1c3349; --cat-study-icon: #57a3de; --cat-study-text: #a0cbed;
+  --cat-food-bg: #402937;  --cat-food-icon: #e67995;  --cat-food-text: #f1b3c3;
+  --cat-warn-bg: #432f1e;  --cat-warn-icon: #f39333;  --cat-warn-text: #f8c28c;
+  --cat-class-bg: #223624; --cat-class-icon: #70ae48; --cat-class-text: #aed298;
+  --cat-rules-bg: #252a49; --cat-rules-icon: #7c7fde; --cat-rules-text: #b5b7ed;
+  --cat-etc-bg: #282e39;   --cat-etc-icon: #878f9c;   --cat-etc-text: #bcc0c7;
+
+  --dim: rgba(0, 0, 0, 0.6);
+  --pressed: rgba(255, 255, 255, 0.06);
+  --highlight: #4a3f12;
+  --toast-bg: #2a3140;
+}
