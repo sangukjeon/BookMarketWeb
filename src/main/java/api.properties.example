@@ -1,0 +1,6 @@
+# 카카오 책 검색 API (https://developers.kakao.com → 내 애플리케이션 → 앱 키 → REST API 키)
+# 비워 두면 북마켓 DB에 저장된 도서에서만 검색해요.
+# 이 파일을 api.properties로 복사하고 kakao.restKey= 뒤에 본인 REST API 키를 넣으세요.
+kakao.restKey=
+kakao.baseUrl=https://dapi.kakao.com
+book.pageSize=12
