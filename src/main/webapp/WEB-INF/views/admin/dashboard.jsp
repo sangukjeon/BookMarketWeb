@@ -45,7 +45,7 @@
   </div>
   <div class="bar-chart" role="img" aria-label="최근 7일 날짜별 매출 막대그래프">
     <c:forEach var="d" items="${days}">
-      <div class="bar-chart__col ${d.today ? 'is-today' : ''} ${d.amount == 0 ? 'is-empty' : ''}">
+      <div class="bar-chart__col ${d.today ? 'is-today' : ''}${d.amount == 0 ? ' is-empty' : ''}">
         <span class="bar-chart__val"><c:if test="${d.amount > 0}"><fmt:formatNumber value="${d.amount / 10000}" pattern="#,##0.#" />만</c:if></span>
         <span class="bar-chart__track"><span class="bar-chart__bar" style="height:${d.amount * 100 / dayMax}%"></span></span>
         <span class="bar-chart__label">${d.today ? '오늘' : d.label}</span>
@@ -90,7 +90,7 @@
             </div>
             <c:choose>
               <c:when test="${o.cancelled}"><span class="pill pill--danger">취소됨</span></c:when>
-              <c:otherwise><span class="price num"><fmt:formatNumber value="${o.payAmount}" pattern="#,##0" />원</span></c:otherwise>
+              <c:otherwise><span class="dash-order__end"><span class="price num"><fmt:formatNumber value="${o.payAmount}" pattern="#,##0" />원</span><span class="pill pill--s ${o.statusPill}">${o.statusLabel}</span></span></c:otherwise>
             </c:choose>
           </a>
         </c:forEach>

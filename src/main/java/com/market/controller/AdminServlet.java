@@ -20,12 +20,12 @@ import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * 관리자 — 원본 AdminPage(도서 추가)를 등록·수정·삭제와 쿠폰 관리로 넓혔다.
- * /admin(매출 요약), /admin/orders(주문 관리), /admin/books, /admin/books/edit(?id=), /admin/books/delete, /admin/coupons,
+ * /admin(매출 요약), /admin/orders(주문 관리, POST /admin/orders/status 배송 단계 변경), /admin/books, /admin/books/edit(?id=), /admin/books/delete, /admin/coupons,
  * /admin/members(회원 관리), /admin/members/detail(?no=), POST /admin/members/status·role·password
  */
 @WebServlet({ "/admin", "/admin/orders", "/admin/books", "/admin/books/edit", "/admin/books/delete", "/admin/coupons",
 		"/admin/members", "/admin/members/detail", "/admin/members/status", "/admin/members/role",
-		"/admin/members/password" })
+		"/admin/members/password", "/admin/orders/status" })
 public class AdminServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private final BookDAO bookDAO = new BookDAO();
@@ -53,9 +53,9 @@ public class AdminServlet extends HttpServlet {
 				break;
 			case "/admin/orders":
 				String status = req.getParameter("status");
-				if (!"ORDERED".equals(status) && !"CANCELLED".equals(status))
-					status = "";
+				status = oneOf(status, "ORDERED", "PREPARING", "SHIPPING", "DELIVERED", "CANCELLED");
 				req.setAttribute("status", status);
+				req.setAttribute("statusCounts", orderDAO.countByStatus());
 				req.setAttribute("orders", orderDAO.findAll(status));
 				Web.render(req, resp, "admin/orders");
 				break;
@@ -192,6 +192,17 @@ public class AdminServlet extends HttpServlet {
 				break;
 			case "/admin/coupons":
 				saveCoupon(req, resp);
+				break;
+			case "/admin/orders/status":
+				long oid = Web.toInt(req.getParameter("id"), -1);
+				String from = req.getParameter("from");
+				String to = com.market.dto.Order.nextOf(from);
+				if (to != null && orderDAO.advance(oid, from))
+					Web.flash(req, "주문을 " + com.market.dto.Order.labelOf(to) + ("DELIVERED".equals(to) ? "로" : "으로") + " 바꿨어요");
+				else
+					Web.flash(req, "이미 상태가 바뀌었거나 바꿀 수 없는 주문이에요");
+				String back = req.getParameter("next");
+				Web.redirect(req, resp, back == null ? "/admin/orders" : Web.safeNext(back));
 				break;
 			case "/admin/members/status":
 			case "/admin/members/role":

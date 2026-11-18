@@ -15,7 +15,7 @@ import com.market.util.DBUtil;
 public class BookDAO {
 	/** 취소되지 않은 주문에서 팔린 권수 */
 	private static final String SOLD = "(SELECT COALESCE(SUM(i.quantity), 0) FROM order_item i JOIN orders o ON o.order_id = i.order_id "
-			+ "WHERE i.book_id = b.book_id AND o.status = 'ORDERED')";
+			+ "WHERE i.book_id = b.book_id AND o.status <> 'CANCELLED')";
 
 	private Book map(ResultSet rs) throws SQLException {
 		Book b = new Book(rs.getString("book_id"), rs.getString("name"), rs.getInt("unit_price"), rs.getString("author"),

@@ -22,6 +22,8 @@ public class Order implements Serializable {
 	private LocalDateTime orderedAt;
 	private String status = "ORDERED";
 	private LocalDateTime cancelledAt;
+	private LocalDateTime shippedAt;
+	private LocalDateTime deliveredAt;
 	private String memberName;
 	private int itemCount;
 	private String firstItemName;
@@ -38,6 +40,76 @@ public class Order implements Serializable {
 	}
 
 	public boolean isCancelled() { return "CANCELLED".equals(status); }
+
+	// ---------- 배송 단계: ORDERED → PREPARING → SHIPPING → DELIVERED (그리고 CANCELLED) ----------
+	public static final String[] FLOW = { "ORDERED", "PREPARING", "SHIPPING", "DELIVERED" };
+
+	/** 취소는 배송이 시작되기 전(주문완료·배송 준비 중)까지만 */
+	public boolean isCancellable() { return "ORDERED".equals(status) || "PREPARING".equals(status); }
+
+	/** 진행 막대용 단계 번호 1~4 (취소는 0) */
+	public int getStep() {
+		for (int i = 0; i < FLOW.length; i++)
+			if (FLOW[i].equals(status))
+				return i + 1;
+		return 0;
+	}
+
+	/** 다음 단계 (마지막이거나 취소됐으면 null) */
+	public String getNextStatus() { return nextOf(status); }
+
+	public static String nextOf(String status) {
+		for (int i = 0; i < FLOW.length - 1; i++)
+			if (FLOW[i].equals(status))
+				return FLOW[i + 1];
+		return null;
+	}
+
+	public static String labelOf(String status) {
+		switch (status == null ? "" : status) {
+		case "ORDERED": return "주문완료";
+		case "PREPARING": return "배송 준비 중";
+		case "SHIPPING": return "배송 중";
+		case "DELIVERED": return "배송 완료";
+		case "CANCELLED": return "취소됨";
+		default: return status;
+		}
+	}
+
+	public String getStatusLabel() { return labelOf(status); }
+
+	/** 상태 배지 색 */
+	public String getStatusPill() {
+		switch (status) {
+		case "PREPARING": return "pill--warn";
+		case "SHIPPING": return "pill--info";
+		case "DELIVERED": return "pill--success";
+		case "CANCELLED": return "pill--danger";
+		default: return "pill--neutral";
+		}
+	}
+
+	/** 관리자 버튼 이름: 다음 단계로 넘기기 */
+	public String getNextActionLabel() {
+		String n = getNextStatus();
+		if (n == null) return null;
+		switch (n) {
+		case "PREPARING": return "배송 준비하기";
+		case "SHIPPING": return "배송 시작하기";
+		default: return "배송 완료하기";
+		}
+	}
+
+	public String getShippedAtText() {
+		return shippedAt == null ? "" : shippedAt.format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm"));
+	}
+	public String getDeliveredAtText() {
+		return deliveredAt == null ? "" : deliveredAt.format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm"));
+	}
+	public LocalDateTime getShippedAt() { return shippedAt; }
+	public void setShippedAt(LocalDateTime shippedAt) { this.shippedAt = shippedAt; }
+	public LocalDateTime getDeliveredAt() { return deliveredAt; }
+	public void setDeliveredAt(LocalDateTime deliveredAt) { this.deliveredAt = deliveredAt; }
 	public String getCancelledAtText() {
 		return cancelledAt == null ? "" : cancelledAt.format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm"));
 	}

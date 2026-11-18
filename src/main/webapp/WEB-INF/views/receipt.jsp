@@ -24,10 +24,19 @@
     <p style="margin-top:12px">
       <c:choose>
         <c:when test="${order.cancelled}"><span class="pill pill--danger">취소됨</span></c:when>
-        <c:otherwise><span class="pill pill--success">결제 완료</span></c:otherwise>
+        <c:otherwise><span class="pill ${order.statusPill}">${order.statusLabel}</span></c:otherwise>
       </c:choose>
     </p>
   </div>
+
+  <c:if test="${not order.cancelled}">
+    <ol class="ship-steps" aria-label="배송 진행 상황: ${order.statusLabel}">
+      <li class="${order.step >= 1 ? 'is-done' : ''}${order.step == 1 ? ' is-now' : ''}"><span class="ship-steps__dot"><ui:icon name="receipt" cls="icon-sm" /></span><span class="ship-steps__label">주문완료</span></li>
+      <li class="${order.step >= 2 ? 'is-done' : ''}${order.step == 2 ? ' is-now' : ''}"><span class="ship-steps__dot"><ui:icon name="package" cls="icon-sm" /></span><span class="ship-steps__label">배송 준비</span></li>
+      <li class="${order.step >= 3 ? 'is-done' : ''}${order.step == 3 ? ' is-now' : ''}"><span class="ship-steps__dot"><ui:icon name="truck" cls="icon-sm" /></span><span class="ship-steps__label">배송 중</span></li>
+      <li class="${order.step >= 4 ? 'is-done' : ''}${order.step == 4 ? ' is-now' : ''}"><span class="ship-steps__dot"><ui:icon name="house" cls="icon-sm" /></span><span class="ship-steps__label">배송 완료</span></li>
+    </ol>
+  </c:if>
 
   <h2 class="t-title2 section-title" style="margin-top:8px">배송 정보</h2>
   <dl class="kv">
@@ -35,6 +44,8 @@
     <dt>연락처</dt><dd class="num"><c:out value="${order.receiverPhone}" /></dd>
     <dt>배송지</dt><dd><c:out value="${order.address}" /></dd>
     <dt>주문 일시</dt><dd class="num">${order.orderedAtText}</dd>
+    <c:if test="${not empty order.shippedAtText}"><dt>배송 시작</dt><dd class="num">${order.shippedAtText}</dd></c:if>
+    <c:if test="${not empty order.deliveredAtText}"><dt>배송 완료</dt><dd class="num">${order.deliveredAtText}</dd></c:if>
     <c:if test="${order.cancelled}"><dt>취소 일시</dt><dd class="num">${order.cancelledAtText}</dd></c:if>
   </dl>
 
@@ -68,7 +79,10 @@
   <button class="btn btn-sub" type="button" onclick="window.print()"><ui:icon name="printer" />인쇄하기</button>
   <a class="btn btn-tint" href="${ctx}/books" style="flex:1">쇼핑 계속하기</a>
 </div>
-<c:if test="${not order.cancelled}">
+<c:if test="${not order.cancelled and not order.cancellable}">
+  <p class="notice-box no-print" style="margin-top:8px"><ui:icon name="truck" cls="icon-sm" /> 배송이 시작돼서 취소할 수 없어요. 받은 뒤 문제가 있으면 고객센터로 문의해 주세요.</p>
+</c:if>
+<c:if test="${order.cancellable}">
   <form class="no-print" method="post" action="${ctx}/orders/cancel" style="margin-top:8px"
         data-confirm="이 주문을 취소할까요?" data-confirm-desc="취소하면 되돌릴 수 없어요. 쓴 쿠폰은 다시 쓸 수 있게 돼요." data-confirm-ok="주문 취소하기">
     <%@ include file="/WEB-INF/views/common/csrf.jspf" %>

@@ -60,8 +60,13 @@ public class OrdersServlet extends HttpServlet {
 		try {
 			if (orderDAO.cancel(id, m.isAdmin() ? 0 : m.getMemberNo()))
 				Web.flash(req, "주문을 취소했어요. 쓴 쿠폰은 다시 쓸 수 있어요");
-			else
-				Web.flash(req, "이미 취소됐거나 취소할 수 없는 주문이에요");
+			else {
+				com.market.dto.Order o = orderDAO.findReceipt(id, m.isAdmin() ? 0 : m.getMemberNo());
+				if (o != null && ("SHIPPING".equals(o.getStatus()) || "DELIVERED".equals(o.getStatus())))
+					Web.flash(req, "배송이 시작돼서 취소할 수 없어요");
+				else
+					Web.flash(req, "이미 취소됐거나 취소할 수 없는 주문이에요");
+			}
 		} catch (SQLException e) {
 			throw new ServletException(e);
 		}

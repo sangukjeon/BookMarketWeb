@@ -26,9 +26,9 @@
             <tr>
               <td class="num nowrap">${o.orderedAtText}</td>
               <td class="num nowrap">${o.orderNo}</td>
-              <th scope="row"><c:out value="${o.firstItemName}" /><c:if test="${o.itemCount > 1}"> <span class="muted">외 ${o.itemCount - 1}종</span></c:if></th>
+              <th scope="row"><c:out value="${o.firstItemName}" /><c:if test="${o.itemCount > 1}"><span class="muted"> 외 ${o.itemCount - 1}종</span></c:if></th>
               <td class="r nowrap" style="${o.cancelled ? 'color:var(--text-3);text-decoration:line-through' : ''}"><fmt:formatNumber value="${o.payAmount}" pattern="#,##0" />원</td>
-              <td class="nowrap"><c:choose><c:when test="${o.cancelled}"><span class="pill pill--danger">취소됨</span></c:when><c:otherwise><span class="pill pill--success">주문완료</span></c:otherwise></c:choose></td>
+              <td class="nowrap"><span class="pill ${o.statusPill}">${o.statusLabel}</span></td>
               <td class="r"><a class="btn btn-sub btn-s" href="${ctx}/orders/receipt?id=${o.orderId}">보기</a></td>
             </tr>
           </c:forEach>
@@ -44,7 +44,7 @@
             </p>
             <p class="meta"><span class="num">${o.orderedAtText}</span><span class="num">${o.orderNo}</span></p>
           </div>
-          <c:if test="${o.cancelled}"><span class="pill pill--danger">취소됨</span></c:if>
+          <span class="pill ${o.statusPill}">${o.statusLabel}</span>
           <p class="price" style="color:${o.cancelled ? 'var(--text-3)' : 'var(--text-strong)'};${o.cancelled ? 'text-decoration:line-through' : ''}"><fmt:formatNumber value="${o.payAmount}" pattern="#,##0" />원</p>
           <ui:icon name="chevron-right" cls="chev" />
         </a>

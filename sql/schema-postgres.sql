@@ -63,9 +63,11 @@ CREATE TABLE orders (
   shipping_fee   INT          NOT NULL DEFAULT 0,
   pay_amount     INT          NOT NULL,
   coupon_code    VARCHAR(20)  NULL REFERENCES coupon (code),
-  status         VARCHAR(10)  NOT NULL DEFAULT 'ORDERED',   -- ORDERED / CANCELLED
+  status         VARCHAR(10)  NOT NULL DEFAULT 'ORDERED',   -- ORDERED → PREPARING → SHIPPING → DELIVERED / CANCELLED
   ordered_at     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  cancelled_at   TIMESTAMP    NULL
+  cancelled_at   TIMESTAMP    NULL,
+  shipped_at     TIMESTAMP    NULL,           -- 배송 시작 시각
+  delivered_at   TIMESTAMP    NULL            -- 배송 완료 시각
 );
 CREATE INDEX idx_orders_member ON orders (member_no);
 CREATE INDEX idx_orders_status ON orders (status, ordered_at);

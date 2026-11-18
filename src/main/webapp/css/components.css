@@ -499,20 +499,30 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .
 .heart.is-on { color: var(--danger); }
 .heart.is-on .icon { fill: currentColor; animation: heart-pop 200ms var(--ease); }
 @keyframes heart-pop { 0% { transform: scale(1.3); } 100% { transform: scale(1); } }
-.stars { display: inline-flex; gap: 1px; color: var(--line); }
+/* 빈 별 색 (다크 모드에서는 어둡게) */
+:root { --star-empty: var(--gray-300); }
+:root[data-theme="dark"] { --star-empty: #3a4354; }
+.stars { display: inline-flex; gap: 1px; color: var(--star-empty); }
+.stars .icon { fill: currentColor; } /* 빈 별도 회색으로 채워 또렷하게 */
 .stars .on { color: var(--cat-tip-icon); fill: currentColor; }
 .rating-line { display: inline-flex; align-items: center; gap: 8px; min-height: var(--hit); font-size: 14px; color: var(--text); text-decoration: none; }
 .rating-line .num { font-weight: 700; color: var(--text-strong); }
 
-.star-input { border: 0; padding: 0; margin: 0; display: inline-flex; flex-direction: row-reverse; justify-content: flex-end; gap: 2px; }
-.star-input legend { float: left; width: 100%; margin-bottom: 4px; }
-.star-input label { display: inline-grid; place-items: center; width: 40px; height: 40px; color: var(--line); cursor: pointer; transition: transform var(--dur-press) var(--ease); }
+/* 별점 입력: fieldset에는 flex를 걸지 않고(브라우저마다 다르게 그림) 안쪽 div에서 줄 세운다.
+   DOM은 5→1 순서, row-reverse로 1→5로 보이게 해서 "선택한 별과 그 왼쪽" 을 ~ 선택자로 칠한다 */
+.star-field { border: 0; padding: 0; margin: 0; min-width: 0; }
+.star-field legend { padding: 0; margin-bottom: 6px; }
+.star-field__row { display: flex; align-items: center; gap: 10px; }
+.star-field__score { font-size: 14px; font-weight: 700; color: var(--text-strong); min-width: 32px; }
+.star-input { display: inline-flex; flex-direction: row-reverse; gap: 2px; }
+.star-input__radio { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); border: 0; opacity: 0; }
+.star-input label { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; flex: none; color: var(--star-empty); cursor: pointer; border-radius: var(--r-xs); transition: transform var(--dur-press) var(--ease), color var(--dur-press) var(--ease); }
+.star-input label .icon { width: 28px; height: 28px; fill: currentColor; stroke: currentColor; }
 .star-input label:active { transform: scale(.92); }
-.star-input label .icon { fill: currentColor; }
-.star-input input:checked ~ label { color: var(--cat-tip-icon); }
-.star-input input:focus-visible + label { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: var(--r-xs); }
+.star-input__radio:checked ~ label { color: var(--cat-tip-icon); }
+.star-input__radio:focus-visible + label { outline: 2px solid var(--primary); outline-offset: 2px; }
 @media (hover: hover) {
-  .star-input:hover label { color: var(--line); }
+  .star-input:hover label { color: var(--star-empty); }
   .star-input label:hover, .star-input label:hover ~ label { color: var(--cat-tip-icon); }
 }
 .review-form { padding-bottom: var(--sp-4); margin-bottom: var(--sp-2); border-bottom: 1px solid var(--line-weak); }
@@ -570,3 +580,23 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .
 .manage-list form:first-child .manage-row { border-top: 0; padding-top: 0; }
 .manage-row .btn { flex: none; }
 .temp-pw { font-size: 16px; letter-spacing: .06em; color: var(--text-strong); user-select: all; }
+
+/* ---------- 배송 단계 ---------- */
+.pill--info { background: var(--primary-weak); color: var(--primary-strong); }
+.pill--info::before { background: var(--primary); }
+.pill--neutral { background: var(--surface-sub); color: var(--text); box-shadow: inset 0 0 0 1px var(--line); }
+.pill--neutral::before { background: var(--text-3); }
+.pill--s { padding: 3px 8px; font-size: 12px; }
+.dash-order__end { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.order-actions { display: inline-flex; gap: 6px; justify-content: flex-end; flex-wrap: nowrap; }
+.order-actions form { margin: 0; }
+.ship-steps { list-style: none; margin: 4px 0 20px; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); position: relative; }
+.ship-steps li { display: flex; flex-direction: column; align-items: center; gap: 6px; position: relative; text-align: center; }
+.ship-steps li + li::before { content: ""; position: absolute; top: 15px; right: 50%; width: 100%; height: 2px; background: var(--line); z-index: 0; }
+.ship-steps li.is-done + li.is-done::before { background: var(--primary); }
+.ship-steps__dot { position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: var(--surface-sub); color: var(--text-3); box-shadow: inset 0 0 0 2px var(--line); }
+.ship-steps li.is-done .ship-steps__dot { background: var(--primary-weak); color: var(--primary-strong); box-shadow: inset 0 0 0 2px var(--primary); }
+.ship-steps li.is-now .ship-steps__dot { background: var(--primary); color: #fff; box-shadow: none; }
+.ship-steps__label { font-size: 12px; line-height: 18px; color: var(--text-2); }
+.ship-steps li.is-now .ship-steps__label { color: var(--text-strong); font-weight: 700; }
+@media print { .ship-steps { display: none; } }

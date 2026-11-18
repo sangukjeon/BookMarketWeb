@@ -83,6 +83,10 @@ public class OrderDAO {
 		o.setStatus(rs.getString("status"));
 		java.sql.Timestamp c = rs.getTimestamp("cancelled_at");
 		o.setCancelledAt(c == null ? null : c.toLocalDateTime());
+		java.sql.Timestamp sh = rs.getTimestamp("shipped_at");
+		o.setShippedAt(sh == null ? null : sh.toLocalDateTime());
+		java.sql.Timestamp dl = rs.getTimestamp("delivered_at");
+		o.setDeliveredAt(dl == null ? null : dl.toLocalDateTime());
 		return o;
 	}
 
@@ -120,12 +124,48 @@ public class OrderDAO {
 	}
 
 	/**
-	 * 주문 취소. 주문완료(ORDERED) 상태만 취소할 수 있다.
+	 * 관리자: 배송 단계를 한 칸 앞으로. 지금 상태가 from일 때만 바뀐다 (두 번 눌러도 한 번만, 뒤로 가기 불가).
+	 * 배송 시작·완료 시각을 함께 남긴다.
+	 * @return 바뀌었으면 true
+	 */
+	public boolean advance(long orderId, String from) throws SQLException {
+		String to = Order.nextOf(from);
+		if (to == null)
+			return false;
+		String timeCol = "SHIPPING".equals(to) ? ", shipped_at = ?" : "DELIVERED".equals(to) ? ", delivered_at = ?" : "";
+		try (Connection con = DBUtil.getConnection(); PreparedStatement ps = con.prepareStatement(
+				"UPDATE orders SET status = ?" + timeCol + " WHERE order_id = ? AND status = ?")) {
+			int i = 1;
+			ps.setString(i++, to);
+			if (!timeCol.isEmpty())
+				ps.setTimestamp(i++, Timestamp.valueOf(LocalDateTime.now(ZoneId.of("Asia/Seoul")).withNano(0)));
+			ps.setLong(i++, orderId);
+			ps.setString(i, from);
+			return ps.executeUpdate() == 1;
+		}
+	}
+
+	/** 관리자 주문 관리 칩에 보여 줄 상태별 주문 수 */
+	public java.util.Map<String, Integer> countByStatus() throws SQLException {
+		java.util.Map<String, Integer> map = new java.util.LinkedHashMap<>();
+		for (String st : new String[] { "ORDERED", "PREPARING", "SHIPPING", "DELIVERED", "CANCELLED" })
+			map.put(st, 0);
+		try (Connection con = DBUtil.getConnection();
+				PreparedStatement ps = con.prepareStatement("SELECT status, COUNT(*) AS cnt FROM orders GROUP BY status");
+				ResultSet rs = ps.executeQuery()) {
+			while (rs.next())
+				map.put(rs.getString("status"), rs.getInt("cnt"));
+		}
+		return map;
+	}
+
+	/**
+	 * 주문 취소. 배송이 시작되기 전(주문완료·배송 준비 중)만 취소할 수 있다.
 	 * memberNo가 0이면 관리자(누구의 주문이든), 아니면 본인 주문만.
 	 * @return 취소했으면 true
 	 */
 	public boolean cancel(long orderId, long memberNo) throws SQLException {
-		String sql = "UPDATE orders SET status = 'CANCELLED', cancelled_at = ? WHERE order_id = ? AND status = 'ORDERED'"
+		String sql = "UPDATE orders SET status = 'CANCELLED', cancelled_at = ? WHERE order_id = ? AND status IN ('ORDERED', 'PREPARING')"
 				+ (memberNo > 0 ? " AND member_no = ?" : "");
 		try (Connection con = DBUtil.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 			ps.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now(ZoneId.of("Asia/Seoul")).withNano(0)));
@@ -138,14 +178,14 @@ public class OrderDAO {
 
 	/** 이 쿠폰을 이미 쓴 주문이 (취소되지 않은 채로) 있는지 */
 	public boolean hasUsedCoupon(long memberNo, String couponCode) throws SQLException {
-		return exists("SELECT 1 FROM orders WHERE member_no = ? AND coupon_code = ? AND status = 'ORDERED'", memberNo,
+		return exists("SELECT 1 FROM orders WHERE member_no = ? AND coupon_code = ? AND status <> 'CANCELLED'", memberNo,
 				couponCode);
 	}
 
 	/** 이 책을 산 적이 있는지 (취소된 주문은 제외) — 리뷰 자격 */
 	public boolean hasPurchased(long memberNo, String bookId) throws SQLException {
 		return exists("SELECT 1 FROM orders o JOIN order_item i ON i.order_id = o.order_id "
-				+ "WHERE o.member_no = ? AND i.book_id = ? AND o.status = 'ORDERED'", memberNo, bookId);
+				+ "WHERE o.member_no = ? AND i.book_id = ? AND o.status <> 'CANCELLED'", memberNo, bookId);
 	}
 
 	private boolean exists(String sql, Object... params) throws SQLException {
@@ -164,12 +204,12 @@ public class OrderDAO {
 		LocalDateTime today = LocalDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDate().atStartOfDay();
 		try (Connection con = DBUtil.getConnection()) {
 			try (PreparedStatement ps = con.prepareStatement("SELECT "
-					+ "COALESCE(SUM(CASE WHEN status='ORDERED' THEN pay_amount END), 0) AS revenue, "
-					+ "COUNT(CASE WHEN status='ORDERED' THEN 1 END) AS orders, "
+					+ "COALESCE(SUM(CASE WHEN status <> 'CANCELLED' THEN pay_amount END), 0) AS revenue, "
+					+ "COUNT(CASE WHEN status <> 'CANCELLED' THEN 1 END) AS orders, "
 					+ "COUNT(CASE WHEN status='CANCELLED' THEN 1 END) AS cancelled, "
-					+ "COALESCE(SUM(CASE WHEN status='ORDERED' AND ordered_at >= ? THEN pay_amount END), 0) AS today_revenue, "
-					+ "COUNT(CASE WHEN status='ORDERED' AND ordered_at >= ? THEN 1 END) AS today_orders, "
-					+ "COALESCE(SUM(CASE WHEN status='ORDERED' THEN discount END), 0) AS discount "
+					+ "COALESCE(SUM(CASE WHEN status <> 'CANCELLED' AND ordered_at >= ? THEN pay_amount END), 0) AS today_revenue, "
+					+ "COUNT(CASE WHEN status <> 'CANCELLED' AND ordered_at >= ? THEN 1 END) AS today_orders, "
+					+ "COALESCE(SUM(CASE WHEN status <> 'CANCELLED' THEN discount END), 0) AS discount "
 					+ "FROM orders")) {
 				ps.setTimestamp(1, Timestamp.valueOf(today));
 				ps.setTimestamp(2, Timestamp.valueOf(today));
@@ -185,7 +225,7 @@ public class OrderDAO {
 			}
 			try (PreparedStatement ps = con.prepareStatement(
 					"SELECT i.book_id, MAX(i.book_name) AS name, SUM(i.quantity) AS qty, SUM(i.line_total) AS amount "
-							+ "FROM order_item i JOIN orders o ON o.order_id = i.order_id WHERE o.status = 'ORDERED' "
+							+ "FROM order_item i JOIN orders o ON o.order_id = i.order_id WHERE o.status <> 'CANCELLED' "
 							+ "GROUP BY i.book_id ORDER BY qty DESC, amount DESC LIMIT 5");
 					ResultSet rs = ps.executeQuery()) {
 				while (rs.next())
@@ -248,7 +288,7 @@ public class OrderDAO {
 		java.time.LocalDate from = today.minusDays(days - 1L);
 		long[] sums = new long[days];
 		try (Connection con = DBUtil.getConnection(); PreparedStatement ps = con.prepareStatement(
-				"SELECT ordered_at, pay_amount FROM orders WHERE status = 'ORDERED' AND ordered_at >= ?")) {
+				"SELECT ordered_at, pay_amount FROM orders WHERE status <> 'CANCELLED' AND ordered_at >= ?")) {
 			ps.setTimestamp(1, Timestamp.valueOf(from.atStartOfDay()));
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next()) {
