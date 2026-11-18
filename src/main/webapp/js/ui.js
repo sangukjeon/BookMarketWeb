@@ -90,3 +90,11 @@ document.addEventListener('click', function (e) {
   b.setAttribute('aria-expanded', String(open));
   if (open) { var f = panel.querySelector('input:not([type=hidden])'); f && f.focus(); }
 });
+
+/* 별점: 고른 점수를 옆에 "N점"으로 보여 준다 */
+document.addEventListener('change', function (e) {
+  var r = e.target;
+  if (!r.classList || !r.classList.contains('star-input__radio')) return;
+  var out = r.closest('.star-field') && r.closest('.star-field').querySelector('.star-field__score');
+  if (out) out.textContent = r.value + '점';
+});

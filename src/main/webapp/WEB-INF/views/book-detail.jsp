@@ -59,13 +59,18 @@
           <form class="review-form" method="post" action="${ctx}/books/review">
             <%@ include file="/WEB-INF/views/common/csrf.jspf" %>
             <input type="hidden" name="id" value="<c:out value='${book.bookId}'/>">
-            <fieldset class="star-input">
+            <fieldset class="star-field">
               <legend class="t-label">별점을 골라 주세요</legend>
-              <c:forEach begin="1" end="5" var="n">
-                <c:set var="v" value="${6 - n}" />
-                <input type="radio" id="star${v}" name="rating" value="${v}" class="sr-only" ${v == 5 ? 'checked' : ''}>
-                <label for="star${v}" title="${v}점"><svg class="icon icon-lg" aria-hidden="true"><use href="${ctx}/images/icons.svg#i-star"/></svg><span class="sr-only">${v}점</span></label>
-              </c:forEach>
+              <div class="star-field__row">
+                <div class="star-input">
+                  <c:forEach begin="1" end="5" var="n">
+                    <c:set var="v" value="${6 - n}" />
+                    <input type="radio" id="star${v}" name="rating" value="${v}" class="star-input__radio" ${v == 5 ? 'checked' : ''} required>
+                    <label for="star${v}" title="${v}점"><svg class="icon" aria-hidden="true"><use href="${ctx}/images/icons.svg#i-star"/></svg><span class="sr-only">${v}점</span></label>
+                  </c:forEach>
+                </div>
+                <output class="star-field__score num" for="star1 star2 star3 star4 star5" aria-live="polite">5점</output>
+              </div>
             </fieldset>
             <div class="field" style="margin-top:8px">
               <label class="sr-only" for="content">리뷰 내용</label>
