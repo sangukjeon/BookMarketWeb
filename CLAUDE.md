@@ -33,7 +33,7 @@ src/main/java/
     oauth/       SocialProvider 인터페이스 + MockSocialProvider (구글·네이버·카카오 목업)
     filter/      EncodingFilter, SecurityFilter (web.xml에 순서대로 등록, @WebFilter 쓰지 않음)
     util/        DBUtil(DBCP 연결 풀, getConnection()은 풀에서 빌림), DBShutdownListener(web.xml 등록, 종료 시 풀 닫기),
-                 PasswordUtil(SHA-256+salt 10,000회), MiniJson, Web(render·redirect·flash·login)
+                 PasswordUtil(SHA-256+salt 10,000회, tempPassword), MemberSessions(관리자가 바꾼 회원의 세션을 다음 요청에서 DB로 다시 읽게 함), MiniJson, Web(render·redirect·flash·login)
 src/main/webapp/
   WEB-INF/views/   JSP. 공통 조각은 common/*.jspf (taglibs, header, footer, csrf, cover, stars)
   WEB-INF/tags/    icon.tag(Lucide 스프라이트), cat.tag(분야 태그), brand.tag(소셜 로고)
@@ -45,7 +45,7 @@ src/main/webapp/
   images/icons.svg Lucide 아이콘 스프라이트
 sql/schema.sql     DB 전체 생성 (DROP 후 다시 만듦 → 실행하면 데이터 초기화)
 sql/schema-postgres.sql  Supabase(PostgreSQL)용. SQL Editor에서 실행. RLS를 켜서 REST API 접근을 막음
-sql/schema-cloud.sql  (쓰지 않음) 예전 TiDB용
+sql/migrate-member-status.sql  기존 DB에 member.status 추가 (데이터 유지)
 tests/             HTTP 종단 테스트 (tests/README.md)
 docs/              DESIGN.md, erd.png, architecture.png, screens/, src/(다이어그램 HTML 원본)
 ```
@@ -53,14 +53,14 @@ docs/              DESIGN.md, erd.png, architecture.png, screens/, src/(다이�
 ## 실행
 - **이클립스(사용자 기본):** Servers 탭 → Tomcat v10.1 → Add and Remove로 BookMarketWeb 추가 → Start → http://localhost:8080/BookMarketWeb
 - **DB 초기화:** `mysql -u root -p --default-character-set=utf8mb4 < sql/schema.sql` (테이블 7개 + 앱 계정 `bookmarket/bookmarket1234` + 관리자 `admin/admin1234` + 쿠폰 2개)
-- **TiDB:** 콘솔 SQL Editor에서 `sql/schema-cloud.sql` 실행 → `db.properties`를 example의 B로 바꿈 (README 2-⑤). 접속 정보·비밀번호는 사용자가 직접 넣는다 (채팅으로 받지 않는다)
+- **Supabase:** SQL Editor에서 `sql/schema-postgres.sql` 실행 → `db.properties`를 example의 A로. 접속 정보·비밀번호는 사용자가 직접 넣는다 (채팅으로 받지 않는다)
 - **이클립스 없이 컴파일 확인:**
   ```
   javac --release 17 -encoding UTF-8 -cp "<톰캣>/lib/servlet-api.jar;<톰캣>/lib/tomcat-dbcp.jar" -d build/classes $(find src/main/java -name "*.java")
   ```
   (macOS/Linux는 클래스패스 구분자가 `;` 대신 `:`)
   배포는 `src/main/webapp` 전체 + `build/classes` + `db.properties`, `api.properties`를 `<톰캣>/webapps/BookMarketWeb/`(`WEB-INF/classes`)에 복사.
-- **테스트:** DB 초기화 → 톰캣 실행 → `python tests/e2e.py` (63개). 카카오 검색은 `tests/fake_kakao.py` + `tests/e2e_kakao.py` (13개, tests/README.md).
+- **테스트:** DB 초기화 → 톰캣 실행 → `python tests/e2e.py` (63개) → `python tests/e2e_members.py` (회원 관리 33개). 카카오 검색은 `tests/fake_kakao.py` + `tests/e2e_kakao.py` (13개, tests/README.md).
 
 ## 꼭 지킬 것 (실제로 겪은 함정)
 - **JSTL URI**는 `http://java.sun.com/jsp/jstl/core` 형식. `jakarta.tags.core`는 이 jar에서 동작하지 않는다.
@@ -80,6 +80,9 @@ docs/              DESIGN.md, erd.png, architecture.png, screens/, src/(다이�
 - `orders.status`: 현재 `ORDERED` / `CANCELLED`. 매출·판매량·리뷰 자격·쿠폰 사용 여부는 **취소되지 않은 주문만** 센다.
 - 쿠폰: 회원당 1회 (`OrderDAO.hasUsedCoupon`), 그 주문을 취소하면 다시 쓸 수 있다.
 - 리뷰: 그 책을 산(취소 안 된) 회원만, 책 1권에 1개 (`uk_review_once`).
+- `member.status`: `ACTIVE` / `SUSPENDED`. 정지 회원은 자체·소셜 로그인 모두 막고(비밀번호가 맞을 때만 "정지" 안내), 로그인 중이면 `SecurityFilter`가 다음 요청에서 로그아웃시킨다. 관리자가 회원 상태·권한을 바꾸면 반드시 `MemberSessions.changed(memberNo)`를 부른다.
+- 회원 관리(`/admin/members`): 관리자는 **자기 계정의 상태·권한을 바꿀 수 없다**(관리자가 0명이 되는 일 방지). 회원 삭제는 하지 않는다(주문·리뷰 FK). 비밀번호 초기화는 `provider = 'LOCAL'`만, 임시 비밀번호는 세션에 잠깐 두고 한 번만 보여 준다.
+- 기존 DB에 컬럼 추가는 `sql/migrate-*.sql`로 따로 둔다 (schema 재실행은 데이터 초기화).
 
 ## 다음 할 일 (사용자와 합의 완료, 아직 구현 전)
 1. **회원 쿠폰함 (쿠폰 직접 등록)**

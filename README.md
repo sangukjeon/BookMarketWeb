@@ -41,6 +41,8 @@
 | <img src="docs/screens/pc-login.png" alt="로그인"> | <img src="docs/screens/pc-mypage.png" alt="마이페이지"> |
 | **관리자 · 매출 요약** | **관리자 · 주문 관리** |
 | <img src="docs/screens/pc-admin.png" alt="관리자 대시보드"> | <img src="docs/screens/pc-admin-orders.png" alt="관리자 주문 관리"> |
+| **관리자 · 회원 관리** | **관리자 · 회원 상세** |
+| <img src="docs/screens/pc-admin-members.png" alt="관리자 회원 목록"> | <img src="docs/screens/pc-admin-member-detail.png" alt="관리자 회원 상세"> |
 
 ### 모바일
 
@@ -70,6 +72,10 @@
 **관리자** (`admin` / `admin1234`)
 - 매출 요약: 오늘·전체 매출, 주문 수, 취소율, **최근 7일 매출 그래프**, 많이 팔린 책 TOP 5
 - 주문 관리(상태 필터·취소), 도서 등록·수정·삭제, 쿠폰 관리
+- **회원 관리**: 이름·아이디·이메일 검색, 가입 방식·권한·상태 필터, 회원별 주문 수·구매액, 회원 상세(정보 + 주문 내역)
+  - **계정 정지 / 해제** — 정지하면 로그인할 수 없고, 이미 로그인해 있던 회원도 다음 요청에서 바로 로그아웃
+  - **권한 변경** (일반 ↔ 관리자) — 다시 로그인하지 않아도 바로 반영. 내 계정은 바꿀 수 없음
+  - **비밀번호 초기화** — 자체 가입 회원에게 임시 비밀번호를 만들어 한 번만 보여 줌
 
 **보안**
 - 모든 쿼리 `PreparedStatement`, 출력 `<c:out>` 이스케이프, 모든 POST에 CSRF 토큰
@@ -100,7 +106,7 @@
 | **bt5 "항목수량 줄이기" (기능 없음)** | `/cart` | **수량 − / + 구현**, 1 아래로는 안 내려감 |
 | CartShippingPage | `/order` | 회원 정보 불러오기, **쿠폰 적용**, 배송비 계산 |
 | CartOrderBillPage | `/orders/receipt` `/orders` | 영수증 DB 저장, 다시 보기·인쇄, **주문 취소** |
-| AdminPage (도서 추가) | `/admin/*` | 매출 요약, 주문 관리, 도서·쿠폰 관리 |
+| AdminPage (도서 추가) | `/admin/*` | 매출 요약, 주문 관리, 도서·쿠폰·회원 관리 |
 | BookInIt (`book.txt`) | `BookDAO` + `book` 테이블 | JDBC, 파일 끝 빈 줄로 책이 중복되던 버그 해결 |
 | `Cart.mCartCount` (static) | 세션별 `Cart` | static이 모든 사용자에게 공유되는 문제 제거 |
 | `Person.phone` (int) | `VARCHAR(20)` | `010`의 앞자리 0이 사라지는 문제 해결 |
@@ -120,6 +126,7 @@
 3. **DB 만들기**
    - Supabase: SQL Editor에서 [`sql/schema-postgres.sql`](sql/schema-postgres.sql) 실행
    - MySQL: Workbench에서 [`sql/schema.sql`](sql/schema.sql) 실행
+   - 이미 쓰던 DB라면 데이터를 지우지 않도록 [`sql/migrate-member-status.sql`](sql/migrate-member-status.sql)만 실행 (회원 관리 기능용 컬럼 1개 추가)
 4. **실행** — `Servers` 탭 → Tomcat v10.1에 `BookMarketWeb` 추가 → Start → http://localhost:8080/BookMarketWeb
 
 | 테스트 계정 · 쿠폰 | |
@@ -189,7 +196,8 @@ mysql -u root -p --default-character-set=utf8mb4 < sql\schema.sql
 | `db.properties 파일을 찾지 못했어요` | `db.properties.example`을 복사해 `db.properties`로 만들었는지 확인 |
 | `IllegalArgumentException: Prohibited character` | `db.password`에 한글·자리 표시(`여기에_…`)가 남아 있음 → 실제 비밀번호(영문·숫자·기호)로 바꾸고 Project Clean → Restart |
 | 설정을 고쳤는데 그대로임 | Eclipse가 `build/classes`의 예전 복사본을 씀 → 프로젝트 Refresh(F5) → `Project > Clean` → 톰캣 Clean → Restart |
-| `Unknown column 'status'` 등 | 최신 `schema.sql` / `schema-postgres.sql` 다시 실행 |
+| `Unknown column 'status'` 등 | 최신 `schema.sql` / `schema-postgres.sql` 다시 실행 (데이터가 지워져요) |
+| 회원 관리 화면에서 `column "status" does not exist` / `Unknown column 'status'` | 기존 데이터를 지키려면 [`sql/migrate-member-status.sql`](sql/migrate-member-status.sql) 한 줄만 실행 |
 | `relation "book" does not exist` | Supabase SQL Editor에서 `schema-postgres.sql`을 실행했는지 확인 |
 | Supabase `password authentication failed` | 사용자 이름이 `postgres.프로젝트ID` 통째인지, 비밀번호가 Database Password인지 확인 |
 | Supabase 연결 시간 초과 | Session pooler 호스트·포트 5432인지 확인. 학교 와이파이가 막으면 휴대폰 테더링으로 확인 |
@@ -216,19 +224,19 @@ src/main/java/com/market/
   cart/         CartInterface ← Cart, CartItem (세션 저장)
   oauth/        SocialProvider, MockSocialProvider, SocialProviders
   filter/       EncodingFilter, SecurityFilter(CSRF · 접근 제어)
-  util/         DBUtil(연결 풀), PasswordUtil, MiniJson, Web
+  util/         DBUtil(연결 풀), PasswordUtil, MemberSessions(정지·권한 변경 즉시 반영), MiniJson, Web
 src/main/webapp/
   css/          tokens · base · components · pc(1024px 이상)
   js/           theme(다크 모드) · ui(토스트 · 시트 · 확인 모달)
   WEB-INF/views JSP 화면 (common/ 공통 조각, admin/ 관리자)
-sql/            schema.sql (MySQL), schema-postgres.sql (Supabase)
-tests/          HTTP 종단 테스트 — 기본 63개 + 카카오 검색 13개
+sql/            schema.sql (MySQL), schema-postgres.sql (Supabase), migrate-member-status.sql (기존 DB에 회원 상태 추가)
+tests/          HTTP 종단 테스트 — 기본 63개 + 회원 관리 33개 + 카카오 검색 13개
 docs/           DESIGN.md, architecture.png, erd.png, screens/
 ```
 
 ## 테스트
 
-DB 초기화 → 톰캣 실행 → `python tests/e2e.py` (63개). 카카오 검색은 가짜 서버로 `tests/e2e_kakao.py` (13개). 자세한 방법은 [`tests/README.md`](tests/README.md).
+DB 초기화 → 톰캣 실행 → `python tests/e2e.py` (63개) → `python tests/e2e_members.py` (회원 관리 33개). 카카오 검색은 가짜 서버로 `tests/e2e_kakao.py` (13개). 자세한 방법은 [`tests/README.md`](tests/README.md).
 
 <details>
 <summary><b>소셜 로그인을 실제로 바꾸려면</b></summary>

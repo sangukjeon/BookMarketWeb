@@ -41,7 +41,7 @@
    <div class="n blue"><b>OrdersServlet</b><span>/orders, /receipt, /orders/cancel</span></div>
    <div class="n blue"><b>MyPageServlet</b><span>/mypage</span></div>
    <div class="n blue"><b>WishlistServlet</b><span>/wishlist, /wishlist/toggle</span></div>
-   <div class="n blue"><b>AdminServlet</b><span>/admin, /admin/orders·books·coupons</span></div>
+   <div class="n blue"><b>AdminServlet</b><span>/admin, /admin/orders·books·coupons·members</span></div>
   </div>
   <div class="cap">JSP (View) — WEB-INF/views + JSTL</div>
   <div class="n"><span>books · book-detail · cart · order · receipt · orders · wishlist · mypage · login · signup · oauth-mock · admin/(dashboard · orders · books · coupons)</span></div>
@@ -85,7 +85,7 @@
 <tr><td>CartItemListPage · bt5 (빈 버튼)</td><td>/cart</td><td>수량 줄이기·늘리기 구현, 배송비 계산</td></tr>
 <tr><td>CartShippingPage</td><td>/order</td><td>배송 정보 + 쿠폰 적용 + 결제 금액 요약</td></tr>
 <tr><td>CartOrderBillPage</td><td>/orders/receipt, /orders</td><td>화면에만 보이던 영수증 → DB 저장, 다시 보기·인쇄, 주문 취소</td></tr>
-<tr><td>AdminLoginDialog · AdminPage</td><td>/admin/books, /admin/coupons</td><td>Admin1234 하드코딩 → DB 관리자 계정, 매출 요약, 주문 관리·취소, 도서·쿠폰 관리</td></tr>
+<tr><td>AdminLoginDialog · AdminPage</td><td>/admin/books, /admin/coupons</td><td>Admin1234 하드코딩 → DB 관리자 계정, 매출 요약, 주문 관리·취소, 도서·쿠폰·회원 관리</td></tr>
 <tr><td>BookInIt (book.txt, EUC-KR)</td><td>BookDAO + book 테이블</td><td>파일 읽기 → JDBC, 중복으로 읽히던 버그 해결</td></tr>
 </table></div>
 </div></body></html>
