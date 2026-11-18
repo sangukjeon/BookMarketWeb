@@ -1,0 +1,100 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><link rel="stylesheet" href="common.css">
+<style>
+.wrap{position:relative;height:1240px}
+.box{position:absolute;width:400px}
+svg.lines{position:absolute;inset:0;pointer-events:none}
+.lbl{font:600 13px "Pretendard Variable";fill:#1E56D6}
+.legend{position:absolute;right:48px;top:44px;display:flex;gap:14px;font-size:13px;align-items:center}
+</style></head><body><div class="wrap">
+<h1>BookMarket ERD</h1><p class="sub">MySQL 8 · 스키마 bookmarket · 테이블 7개 (원본 book.txt와 static 변수 → 관계형 DB, 알라딘 API 도서 캐시)</p>
+<div class="legend"><span><span class="k pk">PK</span> 기본키</span><span><span class="k fk">FK</span> 외래키</span><span><span class="k uk">UK</span> 고유</span></div>
+
+<div class="box" style="left:48px;top:140px"><h3>member <small>회원</small></h3><table>
+<tr><td><span class="k pk">PK</span> member_no</td><td class="t">BIGINT AI</td></tr>
+<tr><td><span class="k uk">UK</span> login_id</td><td class="t">VARCHAR(50)</td></tr>
+<tr><td>password_hash</td><td class="t">VARCHAR(100) NULL</td></tr>
+<tr><td>salt</td><td class="t">VARCHAR(50) NULL</td></tr>
+<tr><td>name</td><td class="t">VARCHAR(50)</td></tr>
+<tr><td>phone</td><td class="t">VARCHAR(20)</td></tr>
+<tr><td>address</td><td class="t">VARCHAR(200)</td></tr>
+<tr><td>email</td><td class="t">VARCHAR(100)</td></tr>
+<tr><td><span class="k uk">UK</span> provider</td><td class="t">LOCAL/GOOGLE/NAVER/KAKAO</td></tr>
+<tr><td><span class="k uk">UK</span> provider_id</td><td class="t">VARCHAR(100)</td></tr>
+<tr><td>role</td><td class="t">USER/ADMIN</td></tr>
+<tr><td>created_at</td><td class="t">DATETIME</td></tr></table></div>
+
+<div class="box" style="left:600px;top:140px"><h3>orders <small>주문 (영수증 머리)</small></h3><table>
+<tr><td><span class="k pk">PK</span> order_id</td><td class="t">BIGINT AI</td></tr>
+<tr><td><span class="k fk">FK</span> member_no</td><td class="t">→ member</td></tr>
+<tr><td>receiver_name</td><td class="t">VARCHAR(50)</td></tr>
+<tr><td>receiver_phone</td><td class="t">VARCHAR(20)</td></tr>
+<tr><td>address</td><td class="t">VARCHAR(200)</td></tr>
+<tr><td>item_total</td><td class="t">INT</td></tr>
+<tr><td>discount</td><td class="t">INT</td></tr>
+<tr><td>shipping_fee</td><td class="t">INT</td></tr>
+<tr><td>pay_amount</td><td class="t">INT</td></tr>
+<tr><td><span class="k fk">FK</span> coupon_code</td><td class="t">→ coupon, NULL</td></tr>
+<tr><td>status</td><td class="t">ORDERED / CANCELLED</td></tr>
+<tr><td>ordered_at</td><td class="t">DATETIME</td></tr>
+<tr><td>cancelled_at</td><td class="t">DATETIME NULL</td></tr></table></div>
+
+<div class="box" style="left:1152px;top:140px"><h3>coupon <small>쿠폰</small></h3><table>
+<tr><td><span class="k pk">PK</span> code</td><td class="t">VARCHAR(20)</td></tr>
+<tr><td>name</td><td class="t">VARCHAR(50)</td></tr>
+<tr><td>type</td><td class="t">RATE / AMOUNT</td></tr>
+<tr><td>value</td><td class="t">INT</td></tr>
+<tr><td>min_amount</td><td class="t">INT</td></tr>
+<tr><td>max_discount</td><td class="t">INT NULL</td></tr>
+<tr><td>active</td><td class="t">TINYINT(1)</td></tr></table></div>
+
+<div class="box" style="left:600px;top:760px"><h3>order_item <small>주문 항목</small></h3><table>
+<tr><td><span class="k pk">PK</span><span class="k fk">FK</span> order_id</td><td class="t">→ orders</td></tr>
+<tr><td><span class="k pk">PK</span><span class="k fk">FK</span> book_id</td><td class="t">→ book</td></tr>
+<tr><td>book_name</td><td class="t">주문 당시 이름</td></tr>
+<tr><td>unit_price</td><td class="t">주문 당시 가격</td></tr>
+<tr><td>quantity</td><td class="t">INT</td></tr>
+<tr><td>line_total</td><td class="t">INT</td></tr></table></div>
+
+<div class="box" style="left:1152px;top:500px"><h3>book <small>도서 (직접 등록 + 알라딘)</small></h3><table>
+<tr><td><span class="k pk">PK</span> book_id</td><td class="t">VARCHAR(20) ISBN</td></tr>
+<tr><td>name</td><td class="t">VARCHAR(200)</td></tr>
+<tr><td>unit_price</td><td class="t">INT</td></tr>
+<tr><td>author</td><td class="t">VARCHAR(200)</td></tr>
+<tr><td>description</td><td class="t">VARCHAR(1000)</td></tr>
+<tr><td>category</td><td class="t">VARCHAR(50)</td></tr>
+<tr><td>release_date</td><td class="t">VARCHAR(10)</td></tr>
+<tr><td>image</td><td class="t">VARCHAR(300) 파일/URL</td></tr>
+<tr><td>publisher</td><td class="t">VARCHAR(100)</td></tr>
+<tr><td>source</td><td class="t">LOCAL / ALADIN</td></tr></table></div>
+
+<div class="box" style="left:48px;top:760px"><h3>wishlist <small>찜 (N:M)</small></h3><table>
+<tr><td><span class="k pk">PK</span><span class="k fk">FK</span> member_no</td><td class="t">→ member</td></tr>
+<tr><td><span class="k pk">PK</span><span class="k fk">FK</span> book_id</td><td class="t">→ book</td></tr>
+<tr><td>created_at</td><td class="t">DATETIME</td></tr></table></div>
+
+<div class="box" style="left:48px;top:960px"><h3>review <small>리뷰 (구매자만, 1인 1개)</small></h3><table>
+<tr><td><span class="k pk">PK</span> review_id</td><td class="t">BIGINT AI</td></tr>
+<tr><td><span class="k fk">FK</span><span class="k uk">UK</span> member_no</td><td class="t">→ member</td></tr>
+<tr><td><span class="k fk">FK</span><span class="k uk">UK</span> book_id</td><td class="t">→ book</td></tr>
+<tr><td>rating</td><td class="t">TINYINT 1~5</td></tr>
+<tr><td>content</td><td class="t">VARCHAR(300)</td></tr>
+<tr><td>created_at</td><td class="t">DATETIME</td></tr></table></div>
+
+<svg class="lines" width="1600" height="1240">
+<defs><marker id="m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="#2B6BF3"/></marker></defs>
+<g stroke="#2B6BF3" stroke-width="2" fill="none" marker-end="url(#m)">
+<path d="M448 260 H598"/><path d="M1150 250 H1004"/>
+<path d="M800 551 V758"/><path d="M1150 800 H1004"/>
+<path d="M248 523 V758"/>
+<path d="M46 420 H24 V1060 H46"/>
+<path d="M1352 827 V1210 H525 V1060 H452"/>
+<path d="M525 1210 V825 H452" /></g>
+<text class="lbl" x="462" y="250">1 : N  주문한다</text>
+<text class="lbl" x="1012" y="240">1 : N  쓰인다</text>
+<text class="lbl" x="812" y="660">1 : N  담는다</text>
+<text class="lbl" x="1012" y="790">1 : N  팔린다</text>
+<text class="lbl" x="260" y="645">1 : N  찜한다</text>
+<text class="lbl" x="60" y="940">1 : N  리뷰를 쓴다 (member)</text>
+<text class="lbl" x="560" y="1200">book 1 : N  찜·리뷰를 받는다</text>
+</svg>
+</div></body></html>

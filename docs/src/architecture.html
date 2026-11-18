@@ -1,0 +1,91 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><link rel="stylesheet" href="common.css">
+<style>
+.wrap{width:1600px}
+.cols{display:grid;grid-template-columns:200px 40px 1fr 40px 1fr 40px 220px;align-items:stretch}
+.col{display:flex;flex-direction:column;gap:10px}
+.cap{font-size:12px;font-weight:600;color:#697383;letter-spacing:.02em;margin-bottom:2px}
+.n{background:#fff;border:1px solid #E5E8EF;border-radius:12px;padding:10px 14px;font-size:14px}
+.n b{display:block;color:#141A24;font-size:15px}
+.n span{font-size:12.5px;color:#697383}
+.blue{background:#EBF2FF;border-color:#2B6BF3}
+.arrow{display:flex;align-items:center;justify-content:center;color:#2B6BF3;font-size:26px;font-weight:700}
+.tier{background:#fff;border:1px solid #E5E8EF;border-radius:16px;padding:16px}
+.tier h2{margin:0 0 12px;font-size:16px;color:#141A24;display:flex;justify-content:space-between}
+.tier h2 small{font-size:12px;color:#697383;font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.map{margin-top:28px}
+.map table{background:#fff;border:1px solid #E5E8EF;border-radius:12px;overflow:hidden;font-size:14px}
+.map td,.map th{padding:9px 16px;border-top:1px solid #F2F3F8;text-align:left;white-space:normal}
+.map th{background:#F9F9FB;font-size:12px;color:#697383;border-top:0}
+.map td:first-child{color:#141A24;font-weight:600}
+</style></head><body><div class="wrap">
+<h1>BookMarketWeb 애플리케이션 구조도</h1>
+<p class="sub">Java Swing 데스크톱 앱 → Tomcat 10.1(WAS) 위의 MVC 웹 애플리케이션 + MySQL(JDBC)</p>
+<div class="cols">
+ <div class="col tier"><h2>브라우저</h2>
+  <div class="n"><b>HTML · CSS</b><span>DESIGN.md 토큰<br>모바일 우선 / PC 2단</span></div>
+  <div class="n"><b>JS</b><span>다크 모드, 하단 시트,<br>확인 모달, 토스트</span></div>
+  <div class="n"><b>세션 쿠키</b><span>HttpOnly<br>장바구니·로그인 유지</span></div>
+ </div>
+ <div class="arrow">⇄</div>
+ <div class="col tier"><h2>Tomcat 10.1 (WAS) <small>Controller · View</small></h2>
+  <div class="cap">Filter (web.xml 순서)</div>
+  <div class="grid2"><div class="n"><b>EncodingFilter</b><span>UTF-8</span></div><div class="n"><b>SecurityFilter</b><span>CSRF · 로그인 · 관리자</span></div></div>
+  <div class="cap">Servlet (Controller)</div>
+  <div class="grid2">
+   <div class="n blue"><b>BookServlet</b><span>/books, /books/detail, /books/review</span></div>
+   <div class="n blue"><b>CartServlet</b><span>/cart/add·increase·decrease…</span></div>
+   <div class="n blue"><b>AuthServlet</b><span>/login /signup /logout</span></div>
+   <div class="n blue"><b>SocialLoginServlet</b><span>/oauth/{google|naver|kakao}/…</span></div>
+   <div class="n blue"><b>OrderServlet</b><span>/order (쿠폰·주문)</span></div>
+   <div class="n blue"><b>OrdersServlet</b><span>/orders, /receipt, /orders/cancel</span></div>
+   <div class="n blue"><b>MyPageServlet</b><span>/mypage</span></div>
+   <div class="n blue"><b>WishlistServlet</b><span>/wishlist, /wishlist/toggle</span></div>
+   <div class="n blue"><b>AdminServlet</b><span>/admin, /admin/orders·books·coupons</span></div>
+  </div>
+  <div class="cap">JSP (View) — WEB-INF/views + JSTL</div>
+  <div class="n"><span>books · book-detail · cart · order · receipt · orders · wishlist · mypage · login · signup · oauth-mock · admin/(dashboard · orders · books · coupons)</span></div>
+ </div>
+ <div class="arrow">→</div>
+ <div class="col tier"><h2>Model <small>DTO · DAO · Util</small></h2>
+  <div class="cap">DTO (원본 상속 구조 유지)</div>
+  <div class="grid2">
+   <div class="n"><b>Item ← Book</b><span>abstract 상속</span></div>
+   <div class="n"><b>Person ← Member</b><span>User/Admin → role</span></div>
+   <div class="n"><b>Order · OrderItem</b><span>영수증</span></div>
+   <div class="n"><b>Coupon · Review</b><span>discountFor(), 별점</span></div>
+  </div>
+  <div class="cap">외부 API</div>
+  <div class="n blue"><b>BookCatalog → AladinClient</b><span>베스트셀러·신간·검색 (HttpClient + MiniJson) → BookDAO에 저장, 키 없으면 DB</span></div>
+  <div class="cap">세션 객체</div>
+  <div class="n"><b>CartInterface ← Cart 1:N CartItem</b><span>static mCartCount 제거 → 사용자별 장바구니</span></div>
+  <div class="cap">DAO (JDBC · PreparedStatement)</div>
+  <div class="grid2">
+   <div class="n"><b>BookDAO</b><span>검색·CRUD</span></div><div class="n"><b>MemberDAO</b><span>가입·로그인·소셜</span></div>
+   <div class="n"><b>OrderDAO</b><span>트랜잭션·취소·매출</span></div><div class="n"><b>CouponDAO</b><span>조회·관리</span></div>
+   <div class="n"><b>WishlistDAO</b><span>찜 토글</span></div><div class="n"><b>ReviewDAO</b><span>구매자 리뷰</span></div>
+  </div>
+  <div class="grid2"><div class="n"><b>DBUtil</b><span>db.properties</span></div><div class="n"><b>PasswordUtil</b><span>SHA-256 + salt</span></div></div>
+  <div class="n"><b>oauth: SocialProvider</b><span>MockSocialProvider (지금) → Google/Naver/Kakao 구현으로 교체</span></div>
+ </div>
+ <div class="arrow">→</div>
+ <div class="col tier"><h2>MySQL 8</h2>
+  <div class="n"><b>bookmarket</b><span>utf8mb4</span></div>
+  <div class="n">member</div><div class="n">book</div><div class="n">coupon</div><div class="n">orders</div><div class="n">order_item</div><div class="n">wishlist</div><div class="n">review</div>
+  <div class="cap" style="margin-top:8px">외부</div>
+  <div class="n blue"><b>알라딘 Open API</b><span>ItemList · ItemSearch (JSON)</span></div>
+ </div>
+</div>
+
+<div class="map"><table>
+<tr><th style="width:280px">원본 Swing (BookMarketSwing)</th><th style="width:420px">웹 (BookMarketWeb)</th><th>바뀐 점</th></tr>
+<tr><td>Welcome · GuestWindow</td><td>/login, /signup, /oauth/*</td><td>이름·연락처만 받던 입장 → 회원가입, 암호화 로그인, 소셜 로그인(목업)</td></tr>
+<tr><td>MainWindow 버튼 9개</td><td>상단 메뉴바(PC) · 하단 시트 메뉴(폰)</td><td>버튼 나열 → 화면별 메뉴 체계, 장바구니 개수 배지</td></tr>
+<tr><td>CartAddItemPage</td><td>/books, /books/detail</td><td>JTable 목록 → 알라딘 베스트셀러·신간·검색, 정렬·페이지, 상세·리뷰·찜, 최근 본 책</td></tr>
+<tr><td>CartItemListPage · bt5 (빈 버튼)</td><td>/cart</td><td>수량 줄이기·늘리기 구현, 배송비 계산</td></tr>
+<tr><td>CartShippingPage</td><td>/order</td><td>배송 정보 + 쿠폰 적용 + 결제 금액 요약</td></tr>
+<tr><td>CartOrderBillPage</td><td>/orders/receipt, /orders</td><td>화면에만 보이던 영수증 → DB 저장, 다시 보기·인쇄, 주문 취소</td></tr>
+<tr><td>AdminLoginDialog · AdminPage</td><td>/admin/books, /admin/coupons</td><td>Admin1234 하드코딩 → DB 관리자 계정, 매출 요약, 주문 관리·취소, 도서·쿠폰 관리</td></tr>
+<tr><td>BookInIt (book.txt, EUC-KR)</td><td>BookDAO + book 테이블</td><td>파일 읽기 → JDBC, 중복으로 읽히던 버그 해결</td></tr>
+</table></div>
+</div></body></html>
