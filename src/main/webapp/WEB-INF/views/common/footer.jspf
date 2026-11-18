@@ -5,7 +5,7 @@
   <div class="container ${containerCls}">
     <div class="footer__cols pc-only">
       <div class="footer__brand">
-        <span class="logo__name">북마켓</span>
+        <span class="logo__name">전상욱 마켓</span>
         <p>교재 BookMarketSwing을 톰캣 웹으로 옮긴 연습용 온라인 서점이에요.<br>실제 결제는 일어나지 않아요.</p>
       </div>
       <nav aria-label="쇼핑">
@@ -21,7 +21,7 @@
         <p>웹 프로그래밍 팀 과제<br>Tomcat 10.1 · JSP/Servlet · JDBC<br>도서 검색: 카카오 책 검색 API</p>
       </div>
     </div>
-    <p class="m-only">북마켓은 웹 프로그래밍 팀 과제로 만든 연습용 서점이에요. 실제 결제는 일어나지 않아요.</p>
+    <p class="m-only">전상욱 마켓은 웹 프로그래밍 팀 과제로 만든 연습용 서점이에요. 실제 결제는 일어나지 않아요.</p>
   </div>
 </footer>
 

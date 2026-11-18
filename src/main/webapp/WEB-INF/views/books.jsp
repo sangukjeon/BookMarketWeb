@@ -18,7 +18,7 @@
       <nav class="side__nav">
         <c:forEach var="opt" items="accuracy,latest,sales">
           <c:url var="sideSortUrl" value="/books"><c:param name="q" value="${q}" /><c:param name="sort" value="${opt}" /></c:url>
-          <a href="${sideSortUrl}" aria-current="${sort == opt}">${opt == 'accuracy' ? '정확도순' : (opt == 'latest' ? '최신순' : '북마켓 판매량순')}</a>
+          <a href="${sideSortUrl}" aria-current="${sort == opt}">${opt == 'accuracy' ? '정확도순' : (opt == 'latest' ? '최신순' : '전상욱 마켓 판매량순')}</a>
         </c:forEach>
       </nav>
     </div>
@@ -66,7 +66,7 @@
 
 <c:if test="${not apiOn}">
   <div class="banner banner--info" style="margin-top:12px"><ui:icon name="info" />
-    <span>지금은 북마켓에 저장된 도서에서만 찾아요. <code>api.properties</code>에 카카오 REST API 키를 넣으면 모든 도서를 검색할 수 있어요.</span></div>
+    <span>지금은 전상욱 마켓에 저장된 도서에서만 찾아요. <code>api.properties</code>에 카카오 REST API 키를 넣으면 모든 도서를 검색할 수 있어요.</span></div>
 </c:if>
 <c:if test="${not empty result.notice}">
   <div class="banner banner--warn" style="margin-top:12px" role="status"><ui:icon name="triangle-alert" /><span><c:out value="${result.notice}" /></span></div>
@@ -89,7 +89,7 @@
 
 <c:choose>
   <c:when test="${empty q}">
-    <div class="shop-head pc-only"><h2>${tab == 'new' ? '신간' : '베스트셀러'}</h2><span class="t-help">${tab == 'new' ? '출판일 순' : '북마켓 판매량 순'}</span></div>
+    <div class="shop-head pc-only"><h2>${tab == 'new' ? '신간' : '베스트셀러'}</h2><span class="t-help">${tab == 'new' ? '출판일 순' : '전상욱 마켓 판매량 순'}</span></div>
     <nav class="tabs m-only" role="tablist" aria-label="도서 목록" style="margin-top:20px">
       <a role="tab" href="${ctx}/books" aria-selected="${tab == 'bestseller'}"><ui:icon name="flame" cls="icon-sm" />&nbsp;베스트셀러</a>
       <a role="tab" href="${ctx}/books?tab=new" aria-selected="${tab == 'new'}"><ui:icon name="sparkles" cls="icon-sm" />&nbsp;신간</a>
@@ -106,7 +106,7 @@
     <div class="chips m-only" aria-label="정렬" style="margin-bottom:16px">
       <c:forEach var="opt" items="accuracy,latest,sales">
         <c:url var="sortUrl" value="/books"><c:param name="q" value="${q}" /><c:param name="sort" value="${opt}" /></c:url>
-        <a class="chip" href="${sortUrl}" aria-current="${sort == opt}">${opt == 'accuracy' ? '정확도순' : (opt == 'latest' ? '최신순' : '북마켓 판매량순')}</a>
+        <a class="chip" href="${sortUrl}" aria-current="${sort == opt}">${opt == 'accuracy' ? '정확도순' : (opt == 'latest' ? '최신순' : '전상욱 마켓 판매량순')}</a>
       </c:forEach>
     </div>
   </c:otherwise>
@@ -157,7 +157,7 @@
       </nav>
     </c:if>
     <c:if test="${result.source == 'KAKAO'}"><p class="t-help" style="margin-top:16px;text-align:center">검색 결과 제공: 카카오</p></c:if>
-    <c:if test="${empty q}"><p class="t-help" style="margin-top:16px;text-align:center">${tab == 'new' ? '북마켓에 저장된 도서를 출판일 순으로 보여 줘요.' : '북마켓에서 실제로 팔린 권수 순서예요.'}</p></c:if>
+    <c:if test="${empty q}"><p class="t-help" style="margin-top:16px;text-align:center">${tab == 'new' ? '전상욱 마켓에 저장된 도서를 출판일 순으로 보여 줘요.' : '전상욱 마켓에서 실제로 팔린 권수 순서예요.'}</p></c:if>
   </c:otherwise>
 </c:choose>
 </div>

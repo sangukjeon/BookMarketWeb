@@ -27,7 +27,7 @@ public class Member extends Person {
 		case "GOOGLE": return "구글";
 		case "NAVER": return "네이버";
 		case "KAKAO": return "카카오";
-		default: return "북마켓";
+		default: return "전상욱 마켓";
 		}
 	}
 

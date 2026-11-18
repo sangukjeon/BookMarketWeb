@@ -13,7 +13,7 @@
   <label class="sr-only" for="mprovider">가입 방식</label>
   <select class="select" id="mprovider" name="provider">
     <option value="">가입 방식 전체</option>
-    <option value="LOCAL" ${provider == 'LOCAL' ? 'selected' : ''}>북마켓 (자체)</option>
+    <option value="LOCAL" ${provider == 'LOCAL' ? 'selected' : ''}>전상욱 마켓 (자체)</option>
     <option value="KAKAO" ${provider == 'KAKAO' ? 'selected' : ''}>카카오</option>
     <option value="NAVER" ${provider == 'NAVER' ? 'selected' : ''}>네이버</option>
     <option value="GOOGLE" ${provider == 'GOOGLE' ? 'selected' : ''}>구글</option>
