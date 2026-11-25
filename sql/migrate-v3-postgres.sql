@@ -4,6 +4,11 @@
 -- Supabase: SQL Editor에 전부 붙여 넣고 Run
 -- (schema-postgres.sql을 새로 실행한 DB에는 이미 들어 있어요)
 -- =========================================================
+-- 예전 업데이트 (회원 상태·배송 단계) — 이미 있으면 건너뜀
+ALTER TABLE member ADD COLUMN IF NOT EXISTS status VARCHAR(10) NOT NULL DEFAULT 'ACTIVE';
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipped_at TIMESTAMP NULL;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMP NULL;
+
 ALTER TABLE book ADD COLUMN IF NOT EXISTS stock INT NOT NULL DEFAULT 20;
 UPDATE book SET category = 'IT/컴퓨터' WHERE category IN ('IT전문서', '컴퓨터입문');
 
