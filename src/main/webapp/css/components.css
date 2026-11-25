@@ -639,7 +639,7 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .
 .fold > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 6px; min-height: var(--hit); font-weight: 600; color: var(--primary-strong); }
 .fold > summary::-webkit-details-marker { display: none; }
 .fold--danger > summary { color: var(--text-2); font-size: 14px; justify-content: center; }
-.auth-intro__mascot { display: block; width: 160px; height: auto; margin-bottom: var(--sp-4); }
+.auth-intro__mascot { display: block; width: 140px; height: auto; margin-bottom: var(--sp-4); }
 .receipt__mascot { display: block; width: 112px; height: auto; margin: 0 auto var(--sp-3); }
 /* 다크 모드: 투명 배경 마스코트가 어두운 면에서도 잘 보이게 옅은 받침 */
 :root[data-theme="dark"] .empty__mascot, :root[data-theme="dark"] .shop-hero__mascot, :root[data-theme="dark"] .auth-intro__mascot, :root[data-theme="dark"] .receipt__mascot { filter: drop-shadow(0 0 10px rgba(255,255,255,.12)); }
@@ -654,3 +654,6 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .
   .shop-head h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
   .shop-head .chip { height: 34px; font-size: 13px; }
 }
+.auth__mascot { display: block; width: 88px; height: auto; margin: 0 auto var(--sp-2); }
+.receipt__mascot { width: 120px; }
+:root[data-theme="dark"] .auth__mascot { filter: drop-shadow(0 0 10px rgba(255,255,255,.12)); }

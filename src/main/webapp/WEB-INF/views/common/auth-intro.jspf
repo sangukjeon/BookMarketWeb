@@ -1,5 +1,5 @@
 <section class="auth-intro pc-only" aria-label="윤상문고 소개">
-  <img class="auth-intro__mascot" src="${ctx}/images/mascot/bear.png" alt="" width="160" height="145">
+  <img class="auth-intro__mascot" src="${ctx}/images/mascot/bear-wave.png" alt="" width="140" height="153">
   <span class="logo__name">윤상문고</span>
   <h2>읽고 싶은 책을<br>가장 편하게 만나는 곳</h2>
   <p>카카오 책 검색으로 모든 도서를 찾고, 장바구니부터 영수증까지 한 번에 끝내요.</p>

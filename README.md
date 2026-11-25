@@ -248,7 +248,7 @@ src/main/java/com/market/
 src/main/webapp/
   css/          tokens · base · components · pc(1024px 이상)
   js/           theme(다크 모드) · ui(토스트 · 시트 · 확인 모달 · 배송지 칩)
-  images/mascot 마스코트 곰 (로고 · 파비콘 · 빈 화면 · 영수증)
+  images/mascot 마스코트 곰 — 책 읽기(로고·목록), 인사(로그인), 만세(주문 완료), 돋보기(빈 화면), 시무룩(오류)
   WEB-INF/views JSP 화면 (common/ 공통 조각, admin/ 관리자)
 sql/            schema.sql (MySQL), schema-postgres.sql (Supabase), migrate-*.sql (기존 DB에 칸·표만 추가)
 tests/          HTTP 종단 테스트 205개 — 기본 68 + 회원 관리 33 + 배송·별점 24 + v3 기능 45 + 소셜 로그인 19 + 카카오 검색·장르 16

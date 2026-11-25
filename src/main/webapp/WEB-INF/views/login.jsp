@@ -6,6 +6,7 @@
 <%@ include file="/WEB-INF/views/common/auth-intro.jspf" %>
 <div class="auth">
   <div class="auth__head">
+    <img class="auth__mascot m-only" src="${ctx}/images/mascot/bear-wave.png" alt="" width="88" height="96">
     <span class="logo__name auth__logo">윤상문고</span>
     <h1 class="t-heading">로그인하고 쇼핑을 이어가세요</h1>
     <p class="t-body3 muted">주문하고 지난 영수증을 볼 수 있어요.</p>

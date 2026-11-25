@@ -141,7 +141,7 @@
 <c:choose>
   <c:when test="${empty result.books}">
     <div class="card empty">
-      <img class="empty__mascot" src="${ctx}/images/mascot/bear.png" alt="" width="132" height="120">
+      <img class="empty__mascot" src="${ctx}/images/mascot/bear-search.png" alt="" width="132" height="126">
       <h2 class="t-title2">${not empty genre ? '아직 이 장르의 책이 없어요' : (empty q ? '아직 보여 줄 책이 없어요' : '찾는 책이 아직 없어요')}</h2>
       <p class="t-body3 muted">${not empty genre ? (apiOn ? '잠시 뒤 다시 열어 보세요. 카카오에서 이 장르의 책을 가져와요.' : '카카오 API 키를 넣거나, 관리자 도서 수정에서 장르를 정하면 여기에 보여요.') : '다른 낱말로 찾거나 띄어쓰기를 바꿔 보세요.'}</p>
       <a class="btn btn-sub" href="${ctx}/books">베스트셀러 보기</a>

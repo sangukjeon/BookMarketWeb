@@ -17,7 +17,7 @@
 <c:choose>
   <c:when test="${cart.isEmpty()}">
     <div class="card empty">
-      <img class="empty__mascot" src="${ctx}/images/mascot/bear.png" alt="" width="132" height="120">
+      <img class="empty__mascot" src="${ctx}/images/mascot/bear-search.png" alt="" width="132" height="126">
       <h2 class="t-title2">장바구니가 비어 있어요</h2>
       <p class="t-body3 muted">마음에 드는 책을 담아 보세요.</p>
       <a class="btn btn-sub" href="${ctx}/books">도서 둘러보기</a>

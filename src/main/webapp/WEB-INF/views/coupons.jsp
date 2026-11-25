@@ -29,7 +29,7 @@
 <c:choose>
   <c:when test="${empty wallet}">
     <div class="card empty">
-      <img class="empty__mascot" src="${ctx}/images/mascot/bear.png" alt="" width="132" height="120">
+      <img class="empty__mascot" src="${ctx}/images/mascot/bear-search.png" alt="" width="132" height="126">
       <h2 class="t-title2">아직 쿠폰이 없어요</h2>
       <p class="t-body3 muted">받은 쿠폰 번호를 위에 넣어 등록해 주세요.</p>
     </div>
