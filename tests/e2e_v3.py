@@ -124,6 +124,14 @@ r = login(requests.Session(), "v3" + sfx, "newpass99"); check("/login" in r.url,
 r = a.get(B + "/admin/members", params={"status": "WITHDRAWN"}); check("탈퇴한 회원" in r.text and "탈퇴함" in r.text and "재고왕" not in r.text, "관리자: 탈퇴 필터 + 개인정보 지움")
 r = a.post(B + "/mypage/withdraw", data={"_csrf": csrf(a.get(B + "/mypage").text), "password": "admin1234"}); check("관리자" in r.text and "탈퇴했어요" not in r.text, "관리자는 탈퇴 못 함")
 
+# ---------- 표지 고화질 ----------
+d = book_form(a, "ISBN1235"); old_img = d["image"]
+d["image"] = "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F1"; a.post(B + "/admin/books/edit", data=d)
+h = requests.get(B + "/books/detail", params={"id": "ISBN1235"}).text
+check("/thumb/R480x0.q85/?fname=http%3A%2F%2Ft1.daumcdn.net" in h and 'data-fallback="https://search1.kakaocdn.net/thumb/R120x174.q85/' in h, "카카오 표지: 큰 그림 주소 + 실패 시 원래 그림")
+d["image"] = old_img; a.post(B + "/admin/books/edit", data=d)
+check('images/books/ISBN1235.jpg' in requests.get(B + "/books/detail", params={"id": "ISBN1235"}).text and "data-fallback" not in requests.get(B + "/books/detail", params={"id": "ISBN1235"}).text, "내 서버 표지는 그대로")
+
 # ---------- 관리자 쿠폰 통계 ----------
 r = a.get(B + "/admin/coupons"); check("등록 / 사용" in r.text and re.search(r'class="r nowrap num">\d+ / \d+<', r.text), "관리자 쿠폰: 등록·사용 수")
 

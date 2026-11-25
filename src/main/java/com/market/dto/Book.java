@@ -51,6 +51,27 @@ public class Book extends Item {
 	/** 표지가 인터넷 주소(카카오 등)인지, images/books 안의 파일인지 */
 	public boolean isRemoteImage() { return image != null && image.startsWith("http"); }
 
+	/** 카카오(다음) 썸네일은 120x174라 흐려요. 주소의 크기 부분만 바꿔 가로 480 그림을 받아요. 다른 주소는 그대로. */
+	public static final String HI_SIZE = "R480x0.q85";
+	private static final java.util.regex.Pattern KAKAO_THUMB =
+			java.util.regex.Pattern.compile("^(https?://[^/]*(?:kakaocdn\\.net|daumcdn\\.net)/thumb/)[A-Za-z]\\d+x\\d+(?:\\.q\\d+)?(/.*)$");
+
+	public String getImageHi() {
+		return hiRes(image);
+	}
+
+	/** 고해상도로 바꿀 수 있으면 true (화면에서 실패 시 원래 그림으로 되돌리는 데 씀) */
+	public boolean isImageUpgraded() {
+		return image != null && !image.equals(getImageHi());
+	}
+
+	static String hiRes(String url) {
+		if (url == null)
+			return null;
+		java.util.regex.Matcher m = KAKAO_THUMB.matcher(url);
+		return m.matches() ? m.group(1) + HI_SIZE + m.group(2) : url;
+	}
+
 	// ---------- 재고 ----------
 	public int getStock() { return stock; }
 	public void setStock(int stock) { this.stock = stock; }

@@ -1,5 +1,6 @@
 <c:choose>
-  <c:when test="${coverBook.remoteImage}"><img src="<c:out value='${coverBook.image}'/>" alt="" loading="lazy" referrerpolicy="no-referrer"></c:when>
+  <c:when test="${coverBook.remoteImage and coverBook.imageUpgraded}"><img src="<c:out value='${coverBook.imageHi}'/>" data-fallback="<c:out value='${coverBook.image}'/>" onerror="this.onerror=null;this.src=this.dataset.fallback" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer"></c:when>
+  <c:when test="${coverBook.remoteImage}"><img src="<c:out value='${coverBook.image}'/>" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer"></c:when>
   <c:when test="${not empty coverBook.image}"><img src="${ctx}/images/books/<c:out value='${coverBook.image}'/>" alt="" loading="lazy"></c:when>
   <c:otherwise><ui:icon name="book-open" /></c:otherwise>
 </c:choose>

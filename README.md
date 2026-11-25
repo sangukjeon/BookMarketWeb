@@ -65,6 +65,7 @@
 **도서**
 - 카카오 책 검색(정확도순·최신순), 베스트셀러(윤상문고 판매량순)·신간 탭, 페이지 나누기
 - **장르별 보기 (10개)**: 소설 · 시/에세이 · 인문 · 경제/경영 · 자기계발 · 과학 · IT/컴퓨터 · 어린이 · 만화 · 여행. 장르마다 권수, 많이 팔린 순/최신순, 상세에 "같은 장르의 다른 책". 카카오는 장르를 주지 않아서 장르 낱말로 찾은 책을 30분마다 가져와 그 장르로 저장(관리자가 고칠 수 있음)
+- **선명한 표지**: 카카오 썸네일(120×174)을 그대로 늘리지 않고 같은 서버의 가로 480 그림으로 불러와요. 큰 그림을 못 받으면 자동으로 원래 그림으로 돌아가요
 - **재고 · 품절**: 책마다 재고(기본 20권), 3권 이하면 "N권 남음", 0이면 품절(구매 버튼 막힘). 주문하면 재고가 줄고(같은 트랜잭션에서 `stock >= 수량` 조건으로 차감, 모자라면 주문 전체 취소), 주문을 취소하면 돌아와요
 - 검색으로 본 책은 `book` 테이블에 자동 저장 → 장바구니·주문·찜·리뷰에 그대로 사용
 - 찜, 별점 리뷰(**구매한 회원만**, 1인 1개, 별 5개를 눌러 고르고 점수 표시), 최근 본 책 5권
@@ -251,13 +252,13 @@ src/main/webapp/
   images/mascot 마스코트 곰 — 책 읽기(로고·목록), 인사(로그인), 만세(주문 완료), 돋보기(빈 화면), 시무룩(오류)
   WEB-INF/views JSP 화면 (common/ 공통 조각, admin/ 관리자)
 sql/            schema.sql (MySQL), schema-postgres.sql (Supabase), migrate-*.sql (기존 DB에 칸·표만 추가)
-tests/          HTTP 종단 테스트 205개 — 기본 68 + 회원 관리 33 + 배송·별점 24 + v3 기능 45 + 소셜 로그인 19 + 카카오 검색·장르 16
+tests/          HTTP 종단 테스트 207개 — 기본 68 + 회원 관리 33 + 배송·별점 24 + v3 기능 47 + 소셜 로그인 19 + 카카오 검색·장르 16
 docs/           DESIGN.md, architecture.png, erd.png, screens/
 ```
 
 ## 테스트
 
-DB 초기화 → 톰캣 실행 → `python tests/e2e.py` (68개) → `python tests/e2e_members.py` (회원 관리 33개) → `python tests/e2e_shipping.py` (배송·별점 24개) → `python tests/e2e_v3.py` (장르·재고·배송지·비밀번호·탈퇴·쿠폰함·장바구니 저장 45개). 카카오 검색·장르 가져오기는 가짜 서버로 `tests/e2e_kakao.py` (16개), 소셜 로그인은 가짜 OAuth 서버로 `tests/e2e_oauth.py` (19개). 자세한 방법은 [`tests/README.md`](tests/README.md).
+DB 초기화 → 톰캣 실행 → `python tests/e2e.py` (68개) → `python tests/e2e_members.py` (회원 관리 33개) → `python tests/e2e_shipping.py` (배송·별점 24개) → `python tests/e2e_v3.py` (장르·재고·배송지·비밀번호·탈퇴·쿠폰함·장바구니 저장·표지 고화질 47개). 카카오 검색·장르 가져오기는 가짜 서버로 `tests/e2e_kakao.py` (16개), 소셜 로그인은 가짜 OAuth 서버로 `tests/e2e_oauth.py` (19개). 자세한 방법은 [`tests/README.md`](tests/README.md).
 
 <details>
 <summary><b>소셜 로그인 실제 연동 (카카오·네이버·구글)</b></summary>

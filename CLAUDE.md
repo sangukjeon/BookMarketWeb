@@ -61,7 +61,7 @@ docs/              DESIGN.md, erd.png, architecture.png, screens/, src/(다이�
   ```
   (macOS/Linux는 클래스패스 구분자가 `;` 대신 `:`)
   배포는 `src/main/webapp` 전체 + `build/classes` + `db.properties`, `api.properties`를 `<톰캣>/webapps/BookMarketWeb/`(`WEB-INF/classes`)에 복사.
-- **테스트:** DB 초기화 → 톰캣 실행 → `python tests/e2e.py` (68개) → `python tests/e2e_members.py` (회원 관리 33개) → `python tests/e2e_shipping.py` (배송·별점 24개) → `python tests/e2e_v3.py` (v3 기능 45개). 소셜 로그인 실제 흐름은 `tests/fake_oauth.py` + `tests/e2e_oauth.py` (19개). 카카오 검색은 `tests/fake_kakao.py` + `tests/e2e_kakao.py` (검색·장르 16개, tests/README.md).
+- **테스트:** DB 초기화 → 톰캣 실행 → `python tests/e2e.py` (68개) → `python tests/e2e_members.py` (회원 관리 33개) → `python tests/e2e_shipping.py` (배송·별점 24개) → `python tests/e2e_v3.py` (v3 기능 47개). 소셜 로그인 실제 흐름은 `tests/fake_oauth.py` + `tests/e2e_oauth.py` (19개). 카카오 검색은 `tests/fake_kakao.py` + `tests/e2e_kakao.py` (검색·장르 16개, tests/README.md).
 
 ## 꼭 지킬 것 (실제로 겪은 함정)
 - **JSTL URI**는 `http://java.sun.com/jsp/jstl/core` 형식. `jakarta.tags.core`는 이 jar에서 동작하지 않는다.
@@ -90,6 +90,7 @@ docs/              DESIGN.md, erd.png, architecture.png, screens/, src/(다이�
 - 장바구니: 세션이 기본이고, 로그인 회원은 바뀔 때마다 `Web.saveCart`로 `cart_item`에 저장, 로그인 때 `mergeSavedCart`로 합친다(재고 한도까지).
 - 배송지: `member_address` 회원당 최대 5개, 기본 배송지를 바꾸면 `member.address/phone`에도 복사한다.
 - 탈퇴: `status = WITHDRAWN`, 행은 지우지 않고(주문·리뷰 FK) 이름·연락처·주소·이메일·비밀번호·provider_id를 지우고 찜·장바구니·쿠폰함·배송지는 삭제. 배송이 끝나지 않은 주문(ORDERED/PREPARING/SHIPPING)이 있거나 관리자면 막는다.
+- 표지: 카카오 썸네일은 120x174라 흐리다. 화면에서는 `Book.getImageHi()`가 주소의 크기 부분을 `R480x0.q85`로 바꾼 큰 그림을 쓰고, `cover.jspf`의 `onerror`가 실패하면 `data-fallback`(원래 주소)으로 되돌린다. DB에는 원래 주소를 그대로 둔다.
 - 리뷰: 그 책을 산(취소 안 된) 회원만, 책 1권에 1개 (`uk_review_once`).
 - `member.status`: `ACTIVE` / `SUSPENDED` / `WITHDRAWN`. 정지 회원은 자체·소셜 로그인 모두 막고(비밀번호가 맞을 때만 "정지" 안내), 로그인 중이면 `SecurityFilter`가 다음 요청에서 로그아웃시킨다. 관리자가 회원 상태·권한을 바꾸면 반드시 `MemberSessions.changed(memberNo)`를 부른다.
 - 회원 관리(`/admin/members`): 관리자는 **자기 계정의 상태·권한을 바꿀 수 없다**(관리자가 0명이 되는 일 방지). 회원 삭제는 하지 않는다(주문·리뷰 FK). 비밀번호 초기화는 `provider = 'LOCAL'`만, 임시 비밀번호는 세션에 잠깐 두고 한 번만 보여 준다.
