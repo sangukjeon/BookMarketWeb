@@ -20,6 +20,14 @@
           <button type="button" class="chip" data-fill="me" aria-pressed="true">네, 같아요</button>
           <button type="button" class="chip" data-fill="new" aria-pressed="false">새로 입력할게요</button>
         </div>
+        <c:if test="${not empty addresses}">
+          <p class="t-help" style="margin-bottom:8px">저장한 배송지</p>
+          <div class="chips" style="margin-bottom:16px" role="group" aria-label="저장한 배송지">
+            <c:forEach var="ad" items="${addresses}">
+              <button type="button" class="chip" data-addr data-name="<c:out value='${ad.receiverName}'/>" data-phone="<c:out value='${ad.phone}'/>" data-address="<c:out value='${ad.address}'/>"><ui:icon name="map-pin" cls="icon-sm" /><c:out value="${ad.label}" /><c:if test="${ad.defaultAddress}"><span class="count">기본</span></c:if></button>
+            </c:forEach>
+          </div>
+        </c:if>
         <div class="field-grid field-grid--2">
           <div class="field">
             <label for="receiverName">받는 분</label>
@@ -39,28 +47,28 @@
 
       <section class="card" aria-labelledby="coupon-title">
         <h2 class="t-title2 card-title" id="coupon-title">쿠폰</h2>
-        <div class="field">
-          <label class="sr-only" for="couponCode">쿠폰 번호</label>
-          <div class="input-row">
-            <input class="input" id="couponCode" name="couponCode" value="<c:out value='${couponCode}'/>" placeholder="쿠폰 번호 입력" autocapitalize="characters" ${not empty couponError ? 'aria-invalid="true"' : ''} aria-describedby="couponHelp">
-            <button class="btn btn-sub btn-s" type="submit" name="action" value="apply" formnovalidate>적용하기</button>
-          </div>
-          <c:choose>
-            <c:when test="${not empty couponError}"><span class="help help--error" id="couponHelp" role="alert"><c:out value="${couponError}" /></span></c:when>
-            <c:when test="${not empty coupon}"><span class="help" id="couponHelp" style="color:var(--success-strong)"><c:out value="${coupon.name}" /> 쿠폰을 적용했어요.</span></c:when>
-            <c:otherwise><span class="help" id="couponHelp">쿠폰은 회원마다 한 번씩 쓸 수 있어요. 아래 쿠폰을 눌러도 바로 들어가요.</span></c:otherwise>
-          </c:choose>
-        </div>
-        <c:if test="${not empty coupons}">
-          <div class="chips" style="margin-top:12px">
-            <c:forEach var="cp" items="${coupons}">
-              <c:set var="isUsed" value="${usedCoupons.contains(cp.code)}" />
-              <button class="chip" type="submit" name="couponPick" value="${cp.code}" formnovalidate aria-pressed="${cp.code == coupon.code}" ${isUsed ? 'disabled' : ''}>
-                <ui:icon name="ticket-percent" cls="icon-sm" /><c:out value="${cp.code}" /><span class="count">${isUsed ? '사용함' : cp.benefitLabel}</span>
-              </button>
-            </c:forEach>
-          </div>
-        </c:if>
+        <input type="hidden" name="couponCode" value="<c:out value='${couponCode}'/>">
+        <c:choose>
+          <c:when test="${not empty couponError}"><p class="help help--error" role="alert" style="margin-bottom:12px"><c:out value="${couponError}" /></p></c:when>
+          <c:when test="${not empty coupon}"><p class="help" style="color:var(--success-strong);margin-bottom:12px"><c:out value="${coupon.name}" /> 쿠폰을 적용했어요.</p></c:when>
+          <c:otherwise><p class="help" style="margin-bottom:12px">내 쿠폰함에 등록한 쿠폰 중에서 골라요. 쿠폰은 한 번씩 쓸 수 있어요.</p></c:otherwise>
+        </c:choose>
+        <c:choose>
+          <c:when test="${empty coupons}">
+            <p class="t-body3 muted">쿠폰함이 비어 있어요.</p>
+          </c:when>
+          <c:otherwise>
+            <div class="chips" role="group" aria-label="내 쿠폰">
+              <c:forEach var="cp" items="${coupons}">
+                <button class="chip" type="submit" name="couponPick" value="${cp.code}" formnovalidate aria-pressed="${cp.code == coupon.code}" ${cp.used ? 'disabled' : ''}>
+                  <ui:icon name="ticket-percent" cls="icon-sm" /><c:out value="${cp.name}" /><span class="count">${cp.used ? '사용함' : cp.benefitLabel}</span>
+                </button>
+              </c:forEach>
+              <c:if test="${not empty coupon}"><button class="chip" type="submit" name="couponPick" value="" formnovalidate>쿠폰 빼기</button></c:if>
+            </div>
+          </c:otherwise>
+        </c:choose>
+        <p style="margin-top:12px"><a class="text-btn" href="${ctx}/coupons?next=/order"><ui:icon name="plus" cls="icon-sm" />쿠폰 번호 등록하기</a></p>
       </section>
 
       <section class="card card--flush" aria-labelledby="items-title">

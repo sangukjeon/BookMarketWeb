@@ -1,6 +1,6 @@
 # CLAUDE.md — BookMarketWeb 작업 안내
 
-웹 프로그래밍 팀 과제. 교재의 Java Swing 프로젝트 **BookMarketSwing**을 **Tomcat 10.1 + JSP/Servlet(MVC) + MySQL(JDBC)** 웹 서점으로 바꾼 프로젝트다.
+웹 프로그래밍 팀 과제 **윤상문고**(팀원 전상욱·조윤후·윤정현). 교재의 Java Swing 프로젝트 **BookMarketSwing**을 **Tomcat 10.1 + JSP/Servlet(MVC) + MySQL(JDBC)** 웹 서점으로 바꾼 프로젝트다.
 사람이 보는 설명은 `README.md`, 화면 규칙은 `docs/DESIGN.md`에 있다.
 
 ## 협업 규칙
@@ -29,7 +29,7 @@ src/main/java/
     controller/  서블릿 (@WebServlet). 요청 → DAO → request 속성 → Web.render("뷰이름")
     api/         BookCatalog(검색은 카카오, 탭은 DB), KakaoBookClient, BookPage. AladinClient.java는 알라딘 서비스 종료(2026-11-01)로 쓰지 않음 — 지워도 됨
     dao/         JDBC. 모든 SQL은 PreparedStatement. OrderDAO.insert는 트랜잭션
-    dto/         Item, Book, Person, Member, Order, OrderItem, Coupon, Review
+    dto/         Item, Book, Person, Member, Order, OrderItem, Coupon, Review, Address, Genre(장르 enum 10개)
     cart/        세션 장바구니 (원본 유지)
     oauth/       SocialProvider ← OAuth2Provider(Kakao·Naver·GoogleOAuthProvider, 실제 연동) / MockSocialProvider(키 없을 때). SocialProviders가 oauth.properties를 보고 고른다
     filter/      EncodingFilter, SecurityFilter (web.xml에 순서대로 등록, @WebFilter 쓰지 않음)
@@ -37,7 +37,7 @@ src/main/java/
                  PasswordUtil(SHA-256+salt 10,000회, tempPassword), MemberSessions(관리자가 바꾼 회원의 세션을 다음 요청에서 DB로 다시 읽게 함), MiniJson, Web(render·redirect·flash·login)
 src/main/webapp/
   WEB-INF/views/   JSP. 공통 조각은 common/*.jspf (taglibs, header, footer, csrf, cover, stars)
-  WEB-INF/tags/    icon.tag(Lucide 스프라이트), cat.tag(분야 태그), brand.tag(소셜 로고)
+  WEB-INF/tags/    icon.tag(Lucide 스프라이트), cat.tag(장르 태그), brand.tag(소셜 로고)
   WEB-INF/web.xml  필터 순서, DB 종료 리스너, fmt 로케일(ko_KR), 오류 페이지, *.jspf UTF-8
   css/tokens.css   docs/DESIGN.md 11장과 값이 같아야 함 (직접 고치지 말고 DESIGN.md와 함께)
   css/components.css  컴포넌트 구현 (모바일 기본)
@@ -46,14 +46,14 @@ src/main/webapp/
   images/icons.svg Lucide 아이콘 스프라이트
 sql/schema.sql     DB 전체 생성 (DROP 후 다시 만듦 → 실행하면 데이터 초기화)
 sql/schema-postgres.sql  Supabase(PostgreSQL)용. SQL Editor에서 실행. RLS를 켜서 REST API 접근을 막음
-sql/migrate-member-status.sql, migrate-shipping.sql  기존 DB에 컬럼만 추가 (데이터 유지)
+sql/migrate-member-status.sql, migrate-shipping.sql, migrate-v3-{postgres,mysql}.sql  기존 DB에 칸·표만 추가 (데이터 유지)
 tests/             HTTP 종단 테스트 (tests/README.md)
 docs/              DESIGN.md, erd.png, architecture.png, screens/, src/(다이어그램 HTML 원본)
 ```
 
 ## 실행
 - **이클립스(사용자 기본):** Servers 탭 → Tomcat v10.1 → Add and Remove로 BookMarketWeb 추가 → Start → http://localhost:8080/BookMarketWeb
-- **DB 초기화:** `mysql -u root -p --default-character-set=utf8mb4 < sql/schema.sql` (테이블 7개 + 앱 계정 `bookmarket/bookmarket1234` + 관리자 `admin/admin1234` + 쿠폰 2개)
+- **DB 초기화:** `mysql -u root -p --default-character-set=utf8mb4 < sql/schema.sql` (테이블 10개 + 앱 계정 `bookmarket/bookmarket1234` + 관리자 `admin/admin1234` + 쿠폰 2개)
 - **Supabase:** SQL Editor에서 `sql/schema-postgres.sql` 실행 → `db.properties`를 example의 A로. 접속 정보·비밀번호는 사용자가 직접 넣는다 (채팅으로 받지 않는다)
 - **이클립스 없이 컴파일 확인:**
   ```
@@ -61,7 +61,7 @@ docs/              DESIGN.md, erd.png, architecture.png, screens/, src/(다이�
   ```
   (macOS/Linux는 클래스패스 구분자가 `;` 대신 `:`)
   배포는 `src/main/webapp` 전체 + `build/classes` + `db.properties`, `api.properties`를 `<톰캣>/webapps/BookMarketWeb/`(`WEB-INF/classes`)에 복사.
-- **테스트:** DB 초기화 → 톰캣 실행 → `python tests/e2e.py` (64개) → `python tests/e2e_members.py` (회원 관리 33개) → `python tests/e2e_shipping.py` (배송·별점 24개). 소셜 로그인 실제 흐름은 `tests/fake_oauth.py` + `tests/e2e_oauth.py` (19개). 카카오 검색은 `tests/fake_kakao.py` + `tests/e2e_kakao.py` (13개, tests/README.md).
+- **테스트:** DB 초기화 → 톰캣 실행 → `python tests/e2e.py` (68개) → `python tests/e2e_members.py` (회원 관리 33개) → `python tests/e2e_shipping.py` (배송·별점 24개) → `python tests/e2e_v3.py` (v3 기능 45개). 소셜 로그인 실제 흐름은 `tests/fake_oauth.py` + `tests/e2e_oauth.py` (19개). 카카오 검색은 `tests/fake_kakao.py` + `tests/e2e_kakao.py` (검색·장르 16개, tests/README.md).
 
 ## 꼭 지킬 것 (실제로 겪은 함정)
 - **JSTL URI**는 `http://java.sun.com/jsp/jstl/core` 형식. `jakarta.tags.core`는 이 jar에서 동작하지 않는다.
@@ -84,15 +84,20 @@ docs/              DESIGN.md, erd.png, architecture.png, screens/, src/(다이�
   - 관리자만 한 단계씩 앞으로 (`OrderDAO.advance(id, from)` = `UPDATE … WHERE status = from`, 두 번 눌러도 한 번만). 순서·이름은 `Order.FLOW`/`labelOf`/`getStatusPill` 한 곳에서 관리.
   - 취소는 `ORDERED`·`PREPARING`에서만 (회원·관리자 모두, `Order.isCancellable`).
   - 매출·판매량·리뷰 자격·쿠폰 사용 여부는 **`status <> 'CANCELLED'`** 로 센다 (`= 'ORDERED'`로 쓰지 않는다).
-- 쿠폰: 회원당 1회 (`OrderDAO.hasUsedCoupon`), 그 주문을 취소하면 다시 쓸 수 있다.
+- 쿠폰: **쿠폰함(`member_coupon`)에 등록한 것만** 주문서에서 쓸 수 있고, 쿠폰당 회원 1회 (`OrderDAO.hasUsedCoupon`), 그 주문을 취소하면 다시 쓸 수 있다. 가입(자체·소셜 첫 로그인)은 `MemberDAO.insert` 끝에서 `WELCOME10`을 넣는다.
+- 장르: `book.category`는 `Genre` enum의 label 10개 중 하나 또는 NULL. 카카오는 장르를 안 주므로 `BookCatalog.browseGenre`가 장르 낱말로 찾아 30분마다 저장하며 **비어 있을 때만** 장르를 붙인다(`COALESCE(category, ?)`, 관리자가 고친 값 보존). 태그 색은 `Genre.tone`과 `cat.tag`가 같아야 한다.
+- 재고: `book.stock`(기본 20, 0 = 품절). 주문 트랜잭션에서 `UPDATE … SET stock = stock - ? WHERE … AND stock >= ?`가 1행이 아니면 `OutOfStockException`으로 전체 롤백. 취소하면 같은 트랜잭션에서 되돌린다.
+- 장바구니: 세션이 기본이고, 로그인 회원은 바뀔 때마다 `Web.saveCart`로 `cart_item`에 저장, 로그인 때 `mergeSavedCart`로 합친다(재고 한도까지).
+- 배송지: `member_address` 회원당 최대 5개, 기본 배송지를 바꾸면 `member.address/phone`에도 복사한다.
+- 탈퇴: `status = WITHDRAWN`, 행은 지우지 않고(주문·리뷰 FK) 이름·연락처·주소·이메일·비밀번호·provider_id를 지우고 찜·장바구니·쿠폰함·배송지는 삭제. 배송이 끝나지 않은 주문(ORDERED/PREPARING/SHIPPING)이 있거나 관리자면 막는다.
 - 리뷰: 그 책을 산(취소 안 된) 회원만, 책 1권에 1개 (`uk_review_once`).
-- `member.status`: `ACTIVE` / `SUSPENDED`. 정지 회원은 자체·소셜 로그인 모두 막고(비밀번호가 맞을 때만 "정지" 안내), 로그인 중이면 `SecurityFilter`가 다음 요청에서 로그아웃시킨다. 관리자가 회원 상태·권한을 바꾸면 반드시 `MemberSessions.changed(memberNo)`를 부른다.
+- `member.status`: `ACTIVE` / `SUSPENDED` / `WITHDRAWN`. 정지 회원은 자체·소셜 로그인 모두 막고(비밀번호가 맞을 때만 "정지" 안내), 로그인 중이면 `SecurityFilter`가 다음 요청에서 로그아웃시킨다. 관리자가 회원 상태·권한을 바꾸면 반드시 `MemberSessions.changed(memberNo)`를 부른다.
 - 회원 관리(`/admin/members`): 관리자는 **자기 계정의 상태·권한을 바꿀 수 없다**(관리자가 0명이 되는 일 방지). 회원 삭제는 하지 않는다(주문·리뷰 FK). 비밀번호 초기화는 `provider = 'LOCAL'`만, 임시 비밀번호는 세션에 잠깐 두고 한 번만 보여 준다.
 - 소셜 로그인: 처음 로그인한 (provider, provider_id)면 가입 후 `/oauth/welcome`(이름·연락처·주소)으로 보낸다. 같은 이메일의 다른 계정과 **자동으로 합치지 않는다**(계정 탈취 방지). 액세스 토큰은 저장하지 않는다. 콜백 주소는 `oauth.redirectBase`가 있으면 그것으로 만든다(콘솔 등록값과 정확히 같아야 함). 카카오 id는 큰 정수라 `MiniJson.idStr`로 읽는다.
 - 기존 DB에 컬럼 추가는 `sql/migrate-*.sql`로 따로 둔다 (schema 재실행은 데이터 초기화).
 
 ## 다음 할 일 (사용자와 합의 완료, 아직 구현 전)
-1. **회원 쿠폰함 (쿠폰 직접 등록)**
+1. ~~회원 쿠폰함~~ **완료 (2026-11-25, v3: 장르·재고·배송지·비밀번호·탈퇴·쿠폰함·장바구니 저장·마스코트, 사이트 이름 윤상문고)** — 아래는 당시 계획 기록
    - 새 테이블 `member_coupon(member_no, code, registered_at)` PK(member_no, code), FK 둘 다.
    - `/coupons` (로그인 필요): 쿠폰 번호 입력 → 등록, 내 쿠폰 목록(상태: 사용 가능 / 사용함 / 멈춤).
    - 주문서 쿠폰은 **내 쿠폰함에 등록한 것만** 선택 가능 (직접 입력 칸 → 내 쿠폰 선택으로 변경).

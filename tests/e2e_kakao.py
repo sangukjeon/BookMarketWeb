@@ -25,4 +25,7 @@ t = csrf(r.text); s.post(B + "/cart/add", data={"_csrf": t, "id": "9791100000004
 r = s.get(B + "/cart"); check("자바 테스트 도서 04" in r.text, "카카오 책 장바구니")
 r = s.get(B + "/books", params={"tab": "new"}); check("자바 테스트 도서" in r.text, "신간 탭에 저장된 카카오 책")
 r = s.get(B + "/books", params={"q": "자바", "sort": "sales"}); check("검색 결과 제공: 카카오" not in r.text and r.text.count('class="book-card"') == 12, "판매량순은 DB 검색")
+r = s.get(B + "/books", params={"genre": "essay"}); check(r.text.count('class="book-card"') == 5 and "여름 에세이 3" in r.text, "장르 화면: 카카오에서 장르 낱말로 가져와 저장")
+r = s.get(B + "/books/detail", params={"id": "9792200000002"}); check("?genre=essay" in r.text and "같은 장르의 다른 책" in r.text, "가져온 책에 장르가 붙음")
+r = s.get(B + "/books", params={"genre": "essay", "tab": "new"}); i = r.text.index('class="book-card"'); check("여름 에세이 5" in r.text[i:i+2500], "장르 + 최신순")
 print(f"\n{ok}개 모두 통과")

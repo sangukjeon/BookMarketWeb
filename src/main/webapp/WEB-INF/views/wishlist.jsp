@@ -10,7 +10,7 @@
 <c:choose>
   <c:when test="${empty books}">
     <div class="card empty">
-      <div class="empty__icon"><ui:icon name="heart" /></div>
+      <img class="empty__mascot" src="${ctx}/images/mascot/bear.png" alt="" width="132" height="120">
       <h2 class="t-title2">아직 찜한 책이 없어요</h2>
       <p class="t-body3 muted">책 상세 화면에서 하트를 누르면 여기에 모여요.</p>
       <a class="btn btn-sub" href="${ctx}/books">도서 둘러보기</a>

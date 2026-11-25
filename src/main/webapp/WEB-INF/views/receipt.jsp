@@ -16,7 +16,7 @@
         <h1 class="t-heading" id="r-title">취소된 주문이에요</h1>
       </c:when>
       <c:otherwise>
-        <div class="done"><ui:icon name="circle-check" /></div>
+        <img class="receipt__mascot no-print" src="${ctx}/images/mascot/bear.png" alt="" width="112" height="101">
         <h1 class="t-heading" id="r-title">주문을 마쳤어요</h1>
       </c:otherwise>
     </c:choose>

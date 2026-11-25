@@ -1,6 +1,8 @@
 <div align="center">
 
-# 북마켓 · BookMarketWeb
+<img src="src/main/webapp/images/mascot/bear.png" alt="윤상문고 마스코트" width="140">
+
+# 윤상문고 · BookMarketWeb
 
 **교재의 Java Swing 프로젝트 `BookMarketSwing`을 Tomcat 위의 웹 서점으로 옮기고 기능을 보완한 팀 과제예요.**
 
@@ -32,50 +34,59 @@
 
 ### PC
 
-| 도서 검색 (카카오 API) | 도서 상세 · 리뷰 |
+| 도서 목록 · 장르 (마스코트) | 도서 검색 |
 |---|---|
-| <img src="docs/screens/pc-search.png" alt="검색"> | <img src="docs/screens/pc-detail.png" alt="상세"> |
-| **장바구니** | **주문 내역** |
-| <img src="docs/screens/pc-cart.png" alt="장바구니"> | <img src="docs/screens/pc-orders.png" alt="주문 내역"> |
-| **영수증 · 배송 진행** | **별점 리뷰 쓰기** |
-| <img src="docs/screens/pc-receipt-shipping.png" alt="영수증 배송 진행 막대"> | <img src="docs/screens/pc-review-stars.png" alt="별점 입력"> |
-| **로그인 (자체 + 소셜)** | **마이페이지** |
+| <img src="docs/screens/pc-genre.png" alt="장르별 도서"> | <img src="docs/screens/pc-search.png" alt="검색"> |
+| **도서 상세 · 재고** | **별점 리뷰** |
+| <img src="docs/screens/pc-detail.png" alt="상세"> | <img src="docs/screens/pc-review-stars.png" alt="별점 리뷰"> |
+| **장바구니 (DB 저장)** | **쿠폰함** |
+| <img src="docs/screens/pc-cart.png" alt="장바구니"> | <img src="docs/screens/pc-coupons.png" alt="쿠폰함"> |
+| **주문 내역** | **영수증 · 배송 진행** |
+| <img src="docs/screens/pc-orders.png" alt="주문 내역"> | <img src="docs/screens/pc-receipt-shipping.png" alt="영수증"> |
+| **로그인 (자체 + 소셜)** | **마이페이지 · 배송지 여러 개** |
 | <img src="docs/screens/pc-login.png" alt="로그인"> | <img src="docs/screens/pc-mypage.png" alt="마이페이지"> |
 | **관리자 · 매출 요약** | **관리자 · 주문 관리** |
 | <img src="docs/screens/pc-admin.png" alt="관리자 대시보드"> | <img src="docs/screens/pc-admin-orders.png" alt="관리자 주문 관리"> |
-| **관리자 · 회원 관리** | **관리자 · 회원 상세** |
-| <img src="docs/screens/pc-admin-members.png" alt="관리자 회원 목록"> | <img src="docs/screens/pc-admin-member-detail.png" alt="관리자 회원 상세"> |
+| **관리자 · 도서(장르·재고)** | **관리자 · 쿠폰 (등록·사용 수)** |
+| <img src="docs/screens/pc-admin-books.png" alt="관리자 도서"> | <img src="docs/screens/pc-admin-coupons.png" alt="관리자 쿠폰"> |
+| **관리자 · 회원 관리** | |
+| <img src="docs/screens/pc-admin-members.png" alt="관리자 회원 목록"> | |
 
 ### 모바일
 
-| 도서 상세 | 장바구니 | 영수증 | 메뉴 | 다크 모드 |
-|---|---|---|---|---|
-| <img src="docs/screens/m-v2-detail.png" width="160"> | <img src="docs/screens/m-04-cart.png" width="160"> | <img src="docs/screens/m-07-receipt.png" width="160"> | <img src="docs/screens/m-09-menu.png" width="160"> | <img src="docs/screens/m-10-dark-books.png" width="160"> |
+| 장르 | 상세 · 재고 | 주문서 · 저장한 배송지 | 쿠폰함 | 영수증 | 메뉴 | 다크 모드 |
+|---|---|---|---|---|---|---|
+| <img src="docs/screens/m-genre.png" width="140"> | <img src="docs/screens/m-detail.png" width="140"> | <img src="docs/screens/m-order.png" width="140"> | <img src="docs/screens/m-coupons.png" width="140"> | <img src="docs/screens/m-receipt.png" width="140"> | <img src="docs/screens/m-menu.png" width="140"> | <img src="docs/screens/m-dark-books.png" width="140"> |
 
 ---
 
 ## 주요 기능
 
 **도서**
-- 카카오 책 검색(정확도순·최신순), 베스트셀러(북마켓 판매량순)·신간 탭, 페이지 나누기
+- 카카오 책 검색(정확도순·최신순), 베스트셀러(윤상문고 판매량순)·신간 탭, 페이지 나누기
+- **장르별 보기 (10개)**: 소설 · 시/에세이 · 인문 · 경제/경영 · 자기계발 · 과학 · IT/컴퓨터 · 어린이 · 만화 · 여행. 장르마다 권수, 많이 팔린 순/최신순, 상세에 "같은 장르의 다른 책". 카카오는 장르를 주지 않아서 장르 낱말로 찾은 책을 30분마다 가져와 그 장르로 저장(관리자가 고칠 수 있음)
+- **재고 · 품절**: 책마다 재고(기본 20권), 3권 이하면 "N권 남음", 0이면 품절(구매 버튼 막힘). 주문하면 재고가 줄고(같은 트랜잭션에서 `stock >= 수량` 조건으로 차감, 모자라면 주문 전체 취소), 주문을 취소하면 돌아와요
 - 검색으로 본 책은 `book` 테이블에 자동 저장 → 장바구니·주문·찜·리뷰에 그대로 사용
 - 찜, 별점 리뷰(**구매한 회원만**, 1인 1개, 별 5개를 눌러 고르고 점수 표시), 최근 본 책 5권
 
 **장바구니 · 주문**
 - 수량 − / + (원본에서 **비어 있던 버튼을 구현**), 배송비 자동 계산 (3만 원 이상 무료)
-- 주문서: 회원 정보 불러오기, **쿠폰 적용(회원당 1회)**, 결제 금액 요약
+- 장바구니 **DB 저장**: 로그인하면 저장된 장바구니와 합쳐져서 다른 PC에서도 그대로
+- 주문서: 회원 정보·**저장한 배송지** 불러오기, **쿠폰함의 쿠폰 골라 쓰기(쿠폰당 1회)**, 결제 금액 요약
 - 영수증 DB 저장·다시 보기·인쇄, **주문 취소** (취소하면 쿠폰 다시 사용 가능)
 - **배송 단계**: 주문완료 → 배송 준비 중 → 배송 중 → 배송 완료. 영수증에 진행 막대, **배송이 시작되면 취소 불가**
 
 **회원**
 - 자체 회원가입·로그인 — **비밀번호 SHA-256 + salt 10,000회 암호화**
 - **카카오·네이버·Google 실제 로그인 (OAuth 2.0)** — 처음이면 가입 + 배송 정보 입력, 다음부터는 바로 로그인. 키를 안 넣은 제공자는 테스트용 목업으로 동작
-- 마이페이지(기본 배송지), 주문 내역, 찜 목록
+- 마이페이지: 내 정보, **배송지 최대 5개**(기본 배송지 지정), **비밀번호 바꾸기**, **회원 탈퇴**(개인정보는 지우고 주문 기록은 "탈퇴한 회원"으로 보관, 배송 중인 주문이 있으면 막음)
+- **쿠폰함**: 쿠폰 번호를 등록해 두고 주문서에서 골라 써요. 가입하면 WELCOME10이 자동으로 들어 있어요
+- 주문 내역, 찜 목록
 
 **관리자** (`admin` / `admin1234`)
 - 매출 요약: 오늘·전체 매출, 주문 수, 취소율, **최근 7일 매출 그래프**, 많이 팔린 책 TOP 5
 - 주문 관리: 상태별 칩(건수), **한 단계씩 배송 진행**(배송 준비하기 → 배송 시작하기 → 배송 완료하기), 배송 전 주문만 취소
-- 도서 등록·수정·삭제, 쿠폰 관리
+- 도서 등록·수정·삭제 (**장르 선택, 재고 입력**), 쿠폰 관리 (**쿠폰별 등록 수 / 사용 수**)
 - **회원 관리**: 이름·아이디·이메일 검색, 가입 방식·권한·상태 필터, 회원별 주문 수·구매액, 회원 상세(정보 + 주문 내역)
   - **계정 정지 / 해제** — 정지하면 로그인할 수 없고, 이미 로그인해 있던 회원도 다음 요청에서 바로 로그아웃
   - **권한 변경** (일반 ↔ 관리자) — 다시 로그인하지 않아도 바로 반영. 내 계정은 바꿀 수 없음
@@ -93,7 +104,7 @@
 <img src="docs/architecture.png" alt="애플리케이션 구조도">
 
 <details>
-<summary><b>ERD (테이블 7개)</b></summary>
+<summary><b>ERD (테이블 10개)</b></summary>
 
 <img src="docs/erd.png" alt="ERD">
 
@@ -131,22 +142,22 @@
 3. **DB 만들기**
    - Supabase: SQL Editor에서 [`sql/schema-postgres.sql`](sql/schema-postgres.sql) 실행
    - MySQL: Workbench에서 [`sql/schema.sql`](sql/schema.sql) 실행
-   - 이미 쓰던 DB라면 데이터를 지우지 않도록 추가용 SQL만 실행: [`migrate-member-status.sql`](sql/migrate-member-status.sql)(회원 관리) → [`migrate-shipping.sql`](sql/migrate-shipping.sql)(배송 단계)
+   - 이미 쓰던 DB라면 데이터를 지우지 않도록 추가용 SQL만 실행: [`migrate-member-status.sql`](sql/migrate-member-status.sql)(회원 관리) → [`migrate-shipping.sql`](sql/migrate-shipping.sql)(배송 단계) → `migrate-v3-postgres.sql` / `migrate-v3-mysql.sql`(장르·재고·배송지·쿠폰함·장바구니 저장)
 4. **실행** — `Servers` 탭 → Tomcat v10.1에 `BookMarketWeb` 추가 → Start → http://localhost:8080/BookMarketWeb
 
 | 테스트 계정 · 쿠폰 | |
 |---|---|
 | 관리자 | `admin` / `admin1234` |
 | 일반 회원 | 회원가입 화면에서 직접 만들기 (영문+숫자 8자 이상) |
-| `WELCOME10` | 10% 할인 (최대 5,000원) |
-| `BOOK3000` | 3만 원 이상이면 3,000원 할인 |
+| `WELCOME10` | 10% 할인 (최대 5,000원) — 가입하면 쿠폰함에 자동으로 들어 있어요 |
+| `BOOK3000` | 3만 원 이상이면 3,000원 할인 — 쿠폰함에서 번호를 등록해야 써요 |
 
 <details>
 <summary><b>Supabase(클라우드 DB) 설정 자세히</b> — 어느 PC에서든 같은 DB</summary>
 
 1. https://supabase.com → **New project** → 지역 Northeast Asia, **Database Password**를 정하고 메모
 2. **SQL Editor** → New query → `sql/schema-postgres.sql` 전체 붙여넣기 → **Run**
-   → Table Editor에 테이블 7개(member, book, coupon, orders, order_item, wishlist, review)가 보이면 성공
+   → Table Editor에 테이블 10개(member, book, coupon, orders, order_item, wishlist, review, member_address, member_coupon, cart_item)가 보이면 성공
 3. 위쪽 **Connect** → **Session pooler** 선택 → 연결 문자열에서 사용자·호스트 확인
    ```
    postgresql://postgres.abcdefgh:[YOUR-PASSWORD]@aws-1-ap-northeast-2.pooler.supabase.com:5432/postgres
@@ -205,6 +216,7 @@ mysql -u root -p --default-character-set=utf8mb4 < sql\schema.sql
 | `Unknown column 'status'` 등 | 최신 `schema.sql` / `schema-postgres.sql` 다시 실행 (데이터가 지워져요) |
 | 회원 관리 화면에서 `column "status" does not exist` / `Unknown column 'status'` | 기존 데이터를 지키려면 [`sql/migrate-member-status.sql`](sql/migrate-member-status.sql) 한 줄만 실행 |
 | 주문 화면에서 `column "shipped_at" does not exist` / `Unknown column 'shipped_at'` | [`sql/migrate-shipping.sql`](sql/migrate-shipping.sql) 두 줄 실행 |
+| `column "stock" does not exist` / `relation "member_coupon" does not exist` / `Table 'bookmarket.cart_item' doesn't exist` | Supabase는 [`sql/migrate-v3-postgres.sql`](sql/migrate-v3-postgres.sql), MySQL은 [`sql/migrate-v3-mysql.sql`](sql/migrate-v3-mysql.sql) 실행 (기존 회원에게 WELCOME10도 넣어 줘요) |
 | 별점 별이 안 보이거나 모양이 깨짐 | 예전 CSS가 캐시된 것 → 브라우저에서 Ctrl+F5 (강력 새로 고침) |
 | `relation "book" does not exist` | Supabase SQL Editor에서 `schema-postgres.sql`을 실행했는지 확인 |
 | Supabase `password authentication failed` | 사용자 이름이 `postgres.프로젝트ID` 통째인지, 비밀번호가 Database Password인지 확인 |
@@ -225,26 +237,27 @@ mysql -u root -p --default-character-set=utf8mb4 < sql\schema.sql
 
 ```
 src/main/java/com/market/
-  controller/   Book · Cart · Auth · SocialLogin · Order · Orders · Wishlist · MyPage · Admin Servlet
+  controller/   Book · Cart · Auth · SocialLogin · Order · Orders · Wishlist · MyPage · Coupon · Admin Servlet
   api/          BookCatalog(카카오 ↔ DB 선택), KakaoBookClient, BookPage
-  dao/          BookDAO, MemberDAO, OrderDAO(트랜잭션·취소·매출), CouponDAO, WishlistDAO, ReviewDAO
-  dto/          Item ← Book, Person ← Member, Order, OrderItem, Coupon, Review
+  dao/          BookDAO, MemberDAO(탈퇴), OrderDAO(트랜잭션·재고·취소·매출), CouponDAO(쿠폰함), AddressDAO, CartDAO, WishlistDAO, ReviewDAO
+  dto/          Item ← Book, Person ← Member, Order, OrderItem, Coupon, Review, Address, Genre(장르 enum)
   cart/         CartInterface ← Cart, CartItem (세션 저장)
   oauth/        SocialProvider ← OAuth2Provider(Kakao·Naver·Google) / MockSocialProvider, SocialProviders
   filter/       EncodingFilter, SecurityFilter(CSRF · 접근 제어)
   util/         DBUtil(연결 풀), PasswordUtil, MemberSessions(정지·권한 변경 즉시 반영), MiniJson, Web
 src/main/webapp/
   css/          tokens · base · components · pc(1024px 이상)
-  js/           theme(다크 모드) · ui(토스트 · 시트 · 확인 모달)
+  js/           theme(다크 모드) · ui(토스트 · 시트 · 확인 모달 · 배송지 칩)
+  images/mascot 마스코트 곰 (로고 · 파비콘 · 빈 화면 · 영수증)
   WEB-INF/views JSP 화면 (common/ 공통 조각, admin/ 관리자)
-sql/            schema.sql (MySQL), schema-postgres.sql (Supabase), migrate-*.sql (기존 DB에 컬럼만 추가)
-tests/          HTTP 종단 테스트 — 기본 64개 + 회원 관리 33개 + 배송·별점 24개 + 소셜 로그인 19개 + 카카오 검색 13개
+sql/            schema.sql (MySQL), schema-postgres.sql (Supabase), migrate-*.sql (기존 DB에 칸·표만 추가)
+tests/          HTTP 종단 테스트 205개 — 기본 68 + 회원 관리 33 + 배송·별점 24 + v3 기능 45 + 소셜 로그인 19 + 카카오 검색·장르 16
 docs/           DESIGN.md, architecture.png, erd.png, screens/
 ```
 
 ## 테스트
 
-DB 초기화 → 톰캣 실행 → `python tests/e2e.py` (64개) → `python tests/e2e_members.py` (회원 관리 33개) → `python tests/e2e_shipping.py` (배송·별점 24개). 카카오 검색은 가짜 서버로 `tests/e2e_kakao.py` (13개), 소셜 로그인은 가짜 OAuth 서버로 `tests/e2e_oauth.py` (19개). 자세한 방법은 [`tests/README.md`](tests/README.md).
+DB 초기화 → 톰캣 실행 → `python tests/e2e.py` (68개) → `python tests/e2e_members.py` (회원 관리 33개) → `python tests/e2e_shipping.py` (배송·별점 24개) → `python tests/e2e_v3.py` (장르·재고·배송지·비밀번호·탈퇴·쿠폰함·장바구니 저장 45개). 카카오 검색·장르 가져오기는 가짜 서버로 `tests/e2e_kakao.py` (16개), 소셜 로그인은 가짜 OAuth 서버로 `tests/e2e_oauth.py` (19개). 자세한 방법은 [`tests/README.md`](tests/README.md).
 
 <details>
 <summary><b>소셜 로그인 실제 연동 (카카오·네이버·구글)</b></summary>

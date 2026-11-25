@@ -1,12 +1,12 @@
 <!DOCTYPE html><html><head><meta charset="utf-8"><link rel="stylesheet" href="common.css">
 <style>
-.wrap{position:relative;height:1240px}
+.wrap{position:relative;height:1640px}
 .box{position:absolute;width:400px}
 svg.lines{position:absolute;inset:0;pointer-events:none}
 .lbl{font:600 13px "Pretendard Variable";fill:#1E56D6}
 .legend{position:absolute;right:48px;top:44px;display:flex;gap:14px;font-size:13px;align-items:center}
 </style></head><body><div class="wrap">
-<h1>BookMarket ERD</h1><p class="sub">Supabase(PostgreSQL) · MySQL 8 · 테이블 7개 (원본 book.txt와 static 변수 → 관계형 DB, 카카오 API 도서 캐시)</p>
+<h1>윤상문고 ERD</h1><p class="sub">Supabase(PostgreSQL) · MySQL 8 · 테이블 10개 (원본 book.txt와 static 변수 → 관계형 DB, 카카오 API 도서 캐시)</p>
 <div class="legend"><span><span class="k pk">PK</span> 기본키</span><span><span class="k fk">FK</span> 외래키</span><span><span class="k uk">UK</span> 고유</span></div>
 
 <div class="box" style="left:48px;top:140px"><h3>member <small>회원</small></h3><table>
@@ -21,7 +21,7 @@ svg.lines{position:absolute;inset:0;pointer-events:none}
 <tr><td><span class="k uk">UK</span> provider</td><td class="t">LOCAL/GOOGLE/NAVER/KAKAO</td></tr>
 <tr><td><span class="k uk">UK</span> provider_id</td><td class="t">VARCHAR(100)</td></tr>
 <tr><td>role</td><td class="t">USER/ADMIN</td></tr>
-<tr><td>status</td><td class="t">ACTIVE/SUSPENDED</td></tr>
+<tr><td>status</td><td class="t">ACTIVE/SUSPENDED/WITHDRAWN</td></tr>
 <tr><td>created_at</td><td class="t">DATETIME</td></tr></table></div>
 
 <div class="box" style="left:600px;top:140px"><h3>orders <small>주문 (영수증 머리)</small></h3><table>
@@ -64,7 +64,8 @@ svg.lines{position:absolute;inset:0;pointer-events:none}
 <tr><td>unit_price</td><td class="t">INT</td></tr>
 <tr><td>author</td><td class="t">VARCHAR(200)</td></tr>
 <tr><td>description</td><td class="t">VARCHAR(1000)</td></tr>
-<tr><td>category</td><td class="t">VARCHAR(50)</td></tr>
+<tr><td>category</td><td class="t">장르 10개 중 하나, NULL</td></tr>
+<tr><td>stock</td><td class="t">INT 기본 20 (0 = 품절)</td></tr>
 <tr><td>release_date</td><td class="t">VARCHAR(10)</td></tr>
 <tr><td>image</td><td class="t">VARCHAR(300) 파일/URL</td></tr>
 <tr><td>publisher</td><td class="t">VARCHAR(100)</td></tr>
@@ -82,6 +83,27 @@ svg.lines{position:absolute;inset:0;pointer-events:none}
 <tr><td>rating</td><td class="t">TINYINT 1~5</td></tr>
 <tr><td>content</td><td class="t">VARCHAR(300)</td></tr>
 <tr><td>created_at</td><td class="t">DATETIME</td></tr></table></div>
+
+<p class="sub" style="position:absolute;left:48px;top:1250px;margin:0;font-weight:700;color:#1E56D6">v3에서 더한 표 — 모두 member_no → member (회원 탈퇴 시 함께 삭제)</p>
+<div class="box" style="left:48px;top:1290px"><h3>member_address <small>배송지 (회원당 최대 5개)</small></h3><table>
+<tr><td><span class="k pk">PK</span> address_id</td><td class="t">BIGINT AI</td></tr>
+<tr><td><span class="k fk">FK</span> member_no</td><td class="t">→ member</td></tr>
+<tr><td>label</td><td class="t">VARCHAR(20) 집·회사</td></tr>
+<tr><td>receiver_name</td><td class="t">VARCHAR(50)</td></tr>
+<tr><td>phone</td><td class="t">VARCHAR(20)</td></tr>
+<tr><td>address</td><td class="t">VARCHAR(200)</td></tr>
+<tr><td>is_default</td><td class="t">BOOLEAN</td></tr></table></div>
+
+<div class="box" style="left:600px;top:1290px"><h3>member_coupon <small>쿠폰함 (N:M)</small></h3><table>
+<tr><td><span class="k pk">PK</span><span class="k fk">FK</span> member_no</td><td class="t">→ member</td></tr>
+<tr><td><span class="k pk">PK</span><span class="k fk">FK</span> code</td><td class="t">→ coupon</td></tr>
+<tr><td>registered_at</td><td class="t">DATETIME</td></tr></table></div>
+
+<div class="box" style="left:1152px;top:1290px"><h3>cart_item <small>저장한 장바구니 (N:M)</small></h3><table>
+<tr><td><span class="k pk">PK</span><span class="k fk">FK</span> member_no</td><td class="t">→ member</td></tr>
+<tr><td><span class="k pk">PK</span><span class="k fk">FK</span> book_id</td><td class="t">→ book</td></tr>
+<tr><td>quantity</td><td class="t">INT</td></tr>
+<tr><td>updated_at</td><td class="t">DATETIME</td></tr></table></div>
 
 <svg class="lines" width="1600" height="1240">
 <defs><marker id="m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="#2B6BF3"/></marker></defs>

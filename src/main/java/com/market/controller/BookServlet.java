@@ -60,7 +60,11 @@ public class BookServlet extends HttpServlet {
 			req.setAttribute("tab", tab);
 			req.setAttribute("sort", sort);
 			req.setAttribute("apiOn", catalog.isApiOn());
-			req.setAttribute("result", catalog.browse(tab, q, sort, page));
+			com.market.dto.Genre genre = q.isEmpty() ? com.market.dto.Genre.bySlug(req.getParameter("genre")) : null;
+			req.setAttribute("genre", genre);
+			req.setAttribute("genres", com.market.dto.Genre.values());
+			req.setAttribute("result", genre != null ? catalog.browseGenre(genre, tab, page) : catalog.browse(tab, q, sort, page));
+			req.setAttribute("genreCounts", bookDAO.countByGenre());
 			Web.render(req, resp, "books");
 		} catch (SQLException e) {
 			throw new ServletException(e);
@@ -80,6 +84,7 @@ public class BookServlet extends HttpServlet {
 		req.setAttribute("book", book);
 		req.setAttribute("reviews", reviews);
 		req.setAttribute("avgRating", Math.round(avg * 10) / 10.0);
+		req.setAttribute("sameGenre", bookDAO.sameGenre(book.getCategory(), book.getBookId(), 4));
 
 		Member m = Web.member(req);
 		if (m != null) {

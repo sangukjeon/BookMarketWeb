@@ -13,7 +13,7 @@
   <label class="sr-only" for="mprovider">가입 방식</label>
   <select class="select" id="mprovider" name="provider">
     <option value="">가입 방식 전체</option>
-    <option value="LOCAL" ${provider == 'LOCAL' ? 'selected' : ''}>전상욱 마켓 (자체)</option>
+    <option value="LOCAL" ${provider == 'LOCAL' ? 'selected' : ''}>윤상문고 (자체)</option>
     <option value="KAKAO" ${provider == 'KAKAO' ? 'selected' : ''}>카카오</option>
     <option value="NAVER" ${provider == 'NAVER' ? 'selected' : ''}>네이버</option>
     <option value="GOOGLE" ${provider == 'GOOGLE' ? 'selected' : ''}>구글</option>
@@ -29,6 +29,7 @@
     <option value="">상태 전체</option>
     <option value="ACTIVE" ${mstatus == 'ACTIVE' ? 'selected' : ''}>정상</option>
     <option value="SUSPENDED" ${mstatus == 'SUSPENDED' ? 'selected' : ''}>정지됨</option>
+    <option value="WITHDRAWN" ${mstatus == 'WITHDRAWN' ? 'selected' : ''}>탈퇴함</option>
   </select>
   <button class="btn btn-tint" type="submit"><ui:icon name="search" cls="icon-sm" />찾기</button>
 </form>
@@ -48,7 +49,7 @@
           <td class="nowrap"><c:out value="${mb.social ? mb.email : mb.loginId}" /></td>
           <td class="nowrap">${mb.providerLabel}</td>
           <td class="nowrap"><c:choose><c:when test="${mb.admin}"><span class="pill pill--warn">관리자</span></c:when><c:otherwise>일반</c:otherwise></c:choose></td>
-          <td class="nowrap"><c:choose><c:when test="${mb.suspended}"><span class="pill pill--danger">정지됨</span></c:when><c:otherwise><span class="pill pill--success">정상</span></c:otherwise></c:choose></td>
+          <td class="nowrap"><c:choose><c:when test="${mb.withdrawn}"><span class="pill pill--neutral">탈퇴함</span></c:when><c:when test="${mb.suspended}"><span class="pill pill--danger">정지됨</span></c:when><c:otherwise><span class="pill pill--success">정상</span></c:otherwise></c:choose></td>
           <td class="r nowrap">${mb.orderCount}건</td>
           <td class="r nowrap"><fmt:formatNumber value="${mb.totalSpent}" pattern="#,##0" />원</td>
           <td class="num nowrap">${mb.createdAtText}</td>

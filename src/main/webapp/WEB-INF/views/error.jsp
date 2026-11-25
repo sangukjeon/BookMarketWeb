@@ -4,7 +4,7 @@
 <c:set var="title" value="문제가 생겼어요" />
 <%@ include file="/WEB-INF/views/common/header.jspf" %>
 <div class="card empty" style="max-width:480px;margin:24px auto">
-  <div class="empty__icon"><ui:icon name="info" /></div>
+  <img class="empty__mascot" src="${ctx}/images/mascot/bear.png" alt="" width="132" height="120">
   <h1 class="t-title2">
     <c:choose>
       <c:when test="${code == 404}">찾는 화면이 없어요</c:when>

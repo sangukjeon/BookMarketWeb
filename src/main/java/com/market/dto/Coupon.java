@@ -12,6 +12,11 @@ public class Coupon implements Serializable {
 	private int minAmount;
 	private Integer maxDiscount;
 	private boolean active = true;
+	// 쿠폰함·관리자 화면에서만 채운다
+	private java.time.LocalDateTime registeredAt;
+	private boolean used;
+	private int registeredCount;
+	private int usedCount;
 
 	/** 상품 합계에 대한 할인액. 조건이 안 맞으면 0 */
 	public int discountFor(int itemTotal) {
@@ -41,4 +46,20 @@ public class Coupon implements Serializable {
 	public void setMaxDiscount(Integer maxDiscount) { this.maxDiscount = maxDiscount; }
 	public boolean isActive() { return active; }
 	public void setActive(boolean active) { this.active = active; }
+
+	public java.time.LocalDateTime getRegisteredAt() { return registeredAt; }
+	public void setRegisteredAt(java.time.LocalDateTime registeredAt) { this.registeredAt = registeredAt; }
+	public String getRegisteredAtText() {
+		return registeredAt == null ? "" : registeredAt.format(java.time.format.DateTimeFormatter.ofPattern("yyyy.MM.dd"));
+	}
+	/** 이 회원이 이미 쓴 쿠폰 (취소되지 않은 주문에 쓰임) */
+	public boolean isUsed() { return used; }
+	public void setUsed(boolean used) { this.used = used; }
+	/** 쿠폰함 상태: 사용 가능 / 사용함 / 멈춤 */
+	public String getWalletStatus() { return !active ? "멈춤" : used ? "사용함" : "사용 가능"; }
+	public boolean isUsable() { return active && !used; }
+	public int getRegisteredCount() { return registeredCount; }
+	public void setRegisteredCount(int registeredCount) { this.registeredCount = registeredCount; }
+	public int getUsedCount() { return usedCount; }
+	public void setUsedCount(int usedCount) { this.usedCount = usedCount; }
 }

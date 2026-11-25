@@ -11,6 +11,7 @@
     <nav class="side__nav">
       <a href="${ctx}/orders" aria-current="${nav == 'orders' ? 'page' : 'false'}"><ui:icon name="receipt" />주문 내역</a>
       <a href="${ctx}/wishlist" aria-current="${nav == 'wishlist' ? 'page' : 'false'}"><ui:icon name="heart" />찜한 책</a>
+      <a href="${ctx}/coupons" aria-current="${nav == 'coupons' ? 'page' : 'false'}"><ui:icon name="ticket-percent" />쿠폰함</a>
       <a href="${ctx}/cart"><ui:icon name="shopping-cart" />장바구니<span class="count">${cartCount}권</span></a>
       <a href="${ctx}/mypage" aria-current="${nav == 'mypage' ? 'page' : 'false'}"><ui:icon name="user-round" />내 정보</a>
       <c:if test="${me.admin}"><a href="${ctx}/admin"><ui:icon name="settings" />관리자</a></c:if>

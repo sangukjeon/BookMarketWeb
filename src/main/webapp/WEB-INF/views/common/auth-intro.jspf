@@ -1,10 +1,11 @@
-<section class="auth-intro pc-only" aria-label="전상욱 마켓 소개">
-  <span class="logo__name">전상욱 마켓</span>
+<section class="auth-intro pc-only" aria-label="윤상문고 소개">
+  <img class="auth-intro__mascot" src="${ctx}/images/mascot/bear.png" alt="" width="160" height="145">
+  <span class="logo__name">윤상문고</span>
   <h2>읽고 싶은 책을<br>가장 편하게 만나는 곳</h2>
   <p>카카오 책 검색으로 모든 도서를 찾고, 장바구니부터 영수증까지 한 번에 끝내요.</p>
   <ul>
-    <li><span class="ico"><ui:icon name="search" /></span><div><b>모든 도서 검색</b><span>도서명·저자·출판사로 찾기</span></div></li>
-    <li><span class="ico"><ui:icon name="ticket-percent" /></span><div><b>쿠폰 할인</b><span>첫 주문 10% 할인 쿠폰</span></div></li>
+    <li><span class="ico"><ui:icon name="search" /></span><div><b>모든 도서 검색</b><span>도서명·저자·출판사, 장르별로 찾기</span></div></li>
+    <li><span class="ico"><ui:icon name="ticket-percent" /></span><div><b>쿠폰함</b><span>가입하면 10% 할인 쿠폰이 들어 있어요</span></div></li>
     <li><span class="ico"><ui:icon name="truck" /></span><div><b>3만 원 이상 무료 배송</b><span>주문 내역에서 영수증 다시 보기</span></div></li>
   </ul>
 </section>

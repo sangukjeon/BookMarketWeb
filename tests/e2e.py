@@ -51,6 +51,11 @@ check("/orders/receipt?id=" in r.url and "주문을 마쳤어요" in r.text and 
 rid = r.url.split("id=")[1]
 r = s.get(B + "/cart"); check("장바구니가 비어 있어요" in r.text, "주문 뒤 장바구니 비움")
 r = s.get(B + "/orders"); check("외 1종" in r.text, "주문 내역")
+# 쿠폰함: 지갑에 없는 쿠폰은 주문서에서 못 씀 → 등록
+r = s.get(B + "/coupons"); check("WELCOME10" in r.text and "사용함" in r.text, "쿠폰함: 가입 쿠폰 지급·사용함 표시")
+r = s.post(B + "/coupons", data={"_csrf": t, "code": "nope"}); check("없는 쿠폰" in r.text or "찾을 수 없" in r.text, "쿠폰함: 없는 번호")
+r = s.post(B + "/coupons", data={"_csrf": t, "code": "book3000"}); check("BOOK3000" in r.text and "사용 가능" in r.text, "쿠폰함: 소문자로 등록")
+r = s.post(B + "/coupons", data={"_csrf": t, "code": "BOOK3000"}); check("이미" in r.text, "쿠폰함: 중복 등록 막음")
 # 배송비 + BOOK3000 최소 금액 미달
 s.post(B + "/cart/add", data={"_csrf": t, "id": "ISBN1236", "next": "/books"})
 r = s.post(B + "/order", data={"_csrf": t, "couponPick": "BOOK3000", "receiverName": "a", "receiverPhone": "010-1111-2222", "address": "주소 다섯글자"})
@@ -65,8 +70,8 @@ s2 = requests.Session(); r = s2.get(B + "/books"); t2 = csrf(s2.get(B + "/books/
 r = s2.post(B + "/login", data={"_csrf": t2, "loginId": "admin", "password": "wrong"}); check("맞지 않아요" in r.text, "틀린 비밀번호")
 r = s2.post(B + "/login", data={"_csrf": t2, "loginId": "admin", "password": "admin1234"}); check(r.url.endswith("/admin"), "관리자 로그인")
 t2 = csrf(r.text)
-r = s2.post(B + "/admin/books/edit", data={"_csrf": t2, "editing": "false", "bookId": "ISBN1237", "name": "자바 마스터", "unitPrice": "31000", "author": "김자바", "category": "IT전문서", "releaseDate": "2025-03-02", "description": "객체지향"})
-check("자바 마스터" in r.text, "도서 등록")
+r = s2.post(B + "/admin/books/edit", data={"_csrf": t2, "editing": "false", "bookId": "ISBN1237", "name": "자바 마스터", "unitPrice": "31000", "author": "김자바", "category": "IT/컴퓨터", "stock": "7", "releaseDate": "2025-03-02", "description": "객체지향"})
+check(r.url.endswith("/admin/books") and "자바 마스터" in r.text and 'role="alert"' not in r.text, "도서 등록")
 r = s2.post(B + "/admin/books/delete", data={"_csrf": t2, "id": "ISBN1234"}); check("지울 수 없어요" in r.text, "주문된 책은 삭제 막기")
 r = s2.post(B + "/admin/books/delete", data={"_csrf": t2, "id": "ISBN1237"}); check("자바 마스터" not in r.text, "도서 삭제")
 r = s2.post(B + "/admin/coupons", data={"_csrf": t2, "code": "SPRING20", "name": "봄 20%", "type": "RATE", "value": "20", "minAmount": "0", "maxDiscount": "4000"})

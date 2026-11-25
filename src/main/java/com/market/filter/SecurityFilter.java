@@ -59,7 +59,7 @@ public class SecurityFilter implements Filter {
 			}
 		}
 		boolean needLogin = path.startsWith("/order") || path.startsWith("/mypage") || path.startsWith("/admin")
-				|| path.startsWith("/wishlist") || path.startsWith("/books/review");
+				|| path.startsWith("/wishlist") || path.startsWith("/books/review") || path.startsWith("/coupons");
 		if (needLogin && m == null) {
 			String next = req.getRequestURI().substring(req.getContextPath().length());
 			if ("GET".equals(req.getMethod()) && req.getQueryString() != null)
@@ -90,7 +90,7 @@ public class SecurityFilter implements Filter {
 		} catch (java.sql.SQLException e) {
 			throw new ServletException(e);
 		}
-		if (fresh == null || fresh.isSuspended()) {
+		if (fresh == null || fresh.isSuspended() || fresh.isWithdrawn()) {
 			session.invalidate();
 			Web.flash(req, "이용이 정지된 계정이라 로그아웃됐어요. 관리자에게 문의해 주세요.");
 			resp.sendRedirect(req.getContextPath() + "/login");

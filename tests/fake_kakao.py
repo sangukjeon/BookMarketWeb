@@ -12,6 +12,10 @@ for i in range(1, 31):
         "thumbnail": f"https://search1.kakaocdn.net/thumb/{i}.jpg" if i % 7 else "", "status": "정상판매"})
 DOCS.append({"title": "ISBN 없는 책", "contents": "", "url": "x", "isbn": "", "datetime": "", "authors": [],
              "publisher": "", "translators": [], "price": 1000, "sale_price": -1, "thumbnail": "", "status": ""})
+for i in range(1, 6):  # 장르 화면용 (장르 낱말 "에세이"로 찾힘)
+    DOCS.append({"title": f"여름 에세이 {i}", "contents": "산문", "url": f"https://search.daum.net/e{i}", "isbn": f"979220000{i:04d}",
+        "datetime": f"2026-0{i}-01T00:00:00.000+09:00", "authors": ["작가"], "publisher": "산문출판", "translators": [],
+        "price": 15000, "sale_price": 13500, "thumbnail": "", "status": "정상판매"})
 class H(BaseHTTPRequestHandler):
     def log_message(self, *a): pass
     def do_GET(self):

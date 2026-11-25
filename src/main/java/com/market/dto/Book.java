@@ -10,6 +10,7 @@ public class Book extends Item {
 	private String image;
 	private String publisher;
 	private String source = "LOCAL";
+	private int stock = 20;
 
 	public Book() {
 	}
@@ -49,4 +50,14 @@ public class Book extends Item {
 	public void setSource(String source) { this.source = source; }
 	/** 표지가 인터넷 주소(카카오 등)인지, images/books 안의 파일인지 */
 	public boolean isRemoteImage() { return image != null && image.startsWith("http"); }
+
+	// ---------- 재고 ----------
+	public int getStock() { return stock; }
+	public void setStock(int stock) { this.stock = stock; }
+	public boolean isSoldOut() { return stock <= 0; }
+	/** 3권 이하로 남았을 때 "N권 남았어요" 안내 */
+	public boolean isLowStock() { return stock > 0 && stock <= 3; }
+
+	/** 장르 (태그 색·링크용). 장르 목록에 없는 값이면 null */
+	public Genre getGenre() { return Genre.byLabel(getCategory()); }
 }

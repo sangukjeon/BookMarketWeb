@@ -76,6 +76,9 @@ public class OrderServlet extends HttpServlet {
 				if (coupon == null || !coupon.isActive()) {
 					couponError = "쓸 수 없는 쿠폰 번호예요. 번호를 다시 확인해 주세요.";
 					coupon = null;
+				} else if (!couponDAO.inWallet(m.getMemberNo(), coupon.getCode())) {
+					couponError = "쿠폰함에 등록한 쿠폰만 쓸 수 있어요. 쿠폰함에서 먼저 등록해 주세요.";
+					coupon = null;
 				} else if (orderDAO.hasUsedCoupon(m.getMemberNo(), coupon.getCode())) {
 					couponError = "이미 쓴 쿠폰이에요. 이 쿠폰으로 한 주문을 취소하면 다시 쓸 수 있어요.";
 					coupon = null;
@@ -112,7 +115,14 @@ public class OrderServlet extends HttpServlet {
 			o.setReceiverName(name);
 			o.setReceiverPhone(phone);
 			o.setAddress(address);
-			long orderId = orderDAO.insert(o);
+			long orderId;
+			try {
+				orderId = orderDAO.insert(o);
+			} catch (com.market.dao.OutOfStockException e) {
+				req.setAttribute("error", "‘" + e.getBookName() + "’의 재고가 모자라요. 장바구니에서 수량을 줄여 주세요.");
+				show(req, resp, coupon);
+				return;
+			}
 
 			if (req.getParameter("saveAddress") != null) {
 				m.setAddress(address);
@@ -121,6 +131,7 @@ public class OrderServlet extends HttpServlet {
 				memberDAO.updateProfile(m);
 			}
 			cart.deleteBook();
+			Web.saveCart(req);
 			Web.flash(req, "주문을 마쳤어요");
 			Web.redirect(req, resp, "/orders/receipt?id=" + orderId);
 		} catch (SQLException e) {
@@ -154,14 +165,17 @@ public class OrderServlet extends HttpServlet {
 	private void show(HttpServletRequest req, HttpServletResponse resp, Coupon coupon)
 			throws ServletException, IOException {
 		try {
-			List<Coupon> coupons = couponDAO.findActive();
-			long memberNo = Web.member(req).getMemberNo();
-			java.util.Set<String> used = new java.util.HashSet<>();
-			for (Coupon c : coupons)
-				if (orderDAO.hasUsedCoupon(memberNo, c.getCode()))
-					used.add(c.getCode());
+			// 내 쿠폰함에 등록한 쿠폰만 고를 수 있다 (멈춘 쿠폰은 빼고)
+			List<Coupon> coupons = new java.util.ArrayList<>();
+			for (Coupon c : couponDAO.findWallet(Web.member(req).getMemberNo()))
+				if (c.isActive())
+					coupons.add(c);
 			req.setAttribute("coupons", coupons);
-			req.setAttribute("usedCoupons", used);
+		} catch (SQLException e) {
+			throw new ServletException(e);
+		}
+		try {
+			req.setAttribute("addresses", new com.market.dao.AddressDAO().findByMember(Web.member(req).getMemberNo()));
 		} catch (SQLException e) {
 			throw new ServletException(e);
 		}

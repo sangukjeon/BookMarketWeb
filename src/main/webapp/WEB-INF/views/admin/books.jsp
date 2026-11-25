@@ -13,7 +13,7 @@
 <div class="tbl-wrap">
   <table class="tbl tbl--wide">
     <caption class="sr-only">도서 목록</caption>
-    <thead><tr><th scope="col">ISBN</th><th scope="col">도서명</th><th scope="col">저자</th><th scope="col">출처</th><th scope="col" class="r">가격</th><th scope="col" class="r">관리</th></tr></thead>
+    <thead><tr><th scope="col">ISBN</th><th scope="col">도서명</th><th scope="col">저자</th><th scope="col">출처</th><th scope="col">장르</th><th scope="col" class="r">가격</th><th scope="col" class="r">재고</th><th scope="col" class="r">관리</th></tr></thead>
     <tbody>
       <c:forEach var="b" items="${books}">
         <tr>
@@ -21,7 +21,9 @@
           <th scope="row"><c:out value="${b.name}" /></th>
           <td><span class="clip" style="display:block;max-width:180px"><c:out value="${b.author}" /></span></td>
           <td class="nowrap"><span class="tag ${b.source == 'LOCAL' ? 'tag--etc' : 'tag--study'}">${b.source == 'LOCAL' ? '직접 등록' : (b.source == 'KAKAO' ? '카카오' : '알라딘')}</span></td>
+          <td class="nowrap"><c:choose><c:when test="${not empty b.category}"><ui:cat name="${b.category}" /></c:when><c:otherwise><span class="t-help">-</span></c:otherwise></c:choose></td>
           <td class="r nowrap"><fmt:formatNumber value="${b.unitPrice}" pattern="#,##0" />원</td>
+          <td class="r nowrap num">${b.soldOut ? '<span class="pill pill--danger pill--s">품절</span>' : b.stock}</td>
           <td class="r nowrap">
             <div class="row" style="justify-content:flex-end">
               <a class="btn btn-sub btn-s" href="${ctx}/admin/books/edit?id=${fn:escapeXml(b.bookId)}">고치기</a>
@@ -34,7 +36,7 @@
           </td>
         </tr>
       </c:forEach>
-      <c:if test="${empty books}"><tr class="empty-row"><td colspan="6">아직 등록된 도서가 없어요</td></tr></c:if>
+      <c:if test="${empty books}"><tr class="empty-row"><td colspan="8">아직 등록된 도서가 없어요</td></tr></c:if>
     </tbody>
   </table>
 </div>

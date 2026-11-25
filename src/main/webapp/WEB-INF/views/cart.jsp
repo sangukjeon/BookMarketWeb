@@ -17,7 +17,7 @@
 <c:choose>
   <c:when test="${cart.isEmpty()}">
     <div class="card empty">
-      <div class="empty__icon"><ui:icon name="shopping-cart" /></div>
+      <img class="empty__mascot" src="${ctx}/images/mascot/bear.png" alt="" width="132" height="120">
       <h2 class="t-title2">장바구니가 비어 있어요</h2>
       <p class="t-body3 muted">마음에 드는 책을 담아 보세요.</p>
       <a class="btn btn-sub" href="${ctx}/books">도서 둘러보기</a>
@@ -37,6 +37,11 @@
                 <div>
                   <h2 class="t-title2"><c:out value="${it.itemBook.name}" /></h2>
                   <p class="t-help num"><fmt:formatNumber value="${it.itemBook.unitPrice}" pattern="#,##0" />원</p>
+                  <c:choose>
+                    <c:when test="${it.itemBook.soldOut}"><p class="help help--error" role="alert">품절됐어요. 빼고 주문해 주세요</p></c:when>
+                    <c:when test="${it.quantity > it.itemBook.stock}"><p class="help help--error" role="alert">재고가 ${it.itemBook.stock}권뿐이에요. 수량을 줄여 주세요</p></c:when>
+                    <c:when test="${it.itemBook.lowStock}"><p class="help" style="color:var(--warn-strong)">${it.itemBook.stock}권 남았어요</p></c:when>
+                  </c:choose>
                 </div>
                 <form method="post" action="${ctx}/cart/remove">
                   <%@ include file="/WEB-INF/views/common/csrf.jspf" %>
@@ -55,7 +60,7 @@
                   <form method="post" action="${ctx}/cart/increase">
                     <%@ include file="/WEB-INF/views/common/csrf.jspf" %>
                     <input type="hidden" name="id" value="${it.bookID}">
-                    <button type="submit" aria-label="수량 늘리기" ${it.quantity >= 99 ? 'disabled' : ''}><ui:icon name="plus" cls="icon-sm" /></button>
+                    <button type="submit" aria-label="수량 늘리기" ${it.quantity >= 99 or it.quantity >= it.itemBook.stock ? 'disabled' : ''}><ui:icon name="plus" cls="icon-sm" /></button>
                   </form>
                 </div>
                 <p class="price" style="color:var(--text-strong)"><fmt:formatNumber value="${it.totalPrice}" pattern="#,##0" /><small>원</small></p>
@@ -77,11 +82,14 @@
             <div class="banner banner--info" style="margin-top:16px"><ui:icon name="truck" />
               <span><fmt:formatNumber value="${30000 - sum}" pattern="#,##0" />원어치 더 담으면 배송비가 무료예요.</span></div>
           </c:if>
-          <p class="t-help" style="margin-top:12px">쿠폰은 다음 단계인 주문서에서 쓸 수 있어요.</p>
+          <p class="t-help" style="margin-top:12px">쿠폰은 다음 단계인 주문서에서 쓸 수 있어요.<c:if test="${not empty me}"> 장바구니는 저장돼서 다른 PC에서도 그대로 보여요.</c:if></p>
         </div>
         <div class="plate">
           <div class="plate__inner">
-            <a class="btn btn-main" href="${ctx}/order"><span class="num"><fmt:formatNumber value="${sum + ship}" pattern="#,##0" />원</span> 주문하기</a>
+            <c:choose>
+              <c:when test="${stockProblem}"><button class="btn btn-main btn-soldout" type="button" disabled>재고를 확인해 주세요</button></c:when>
+              <c:otherwise><a class="btn btn-main" href="${ctx}/order"><span class="num"><fmt:formatNumber value="${sum + ship}" pattern="#,##0" />원</span> 주문하기</a></c:otherwise>
+            </c:choose>
           </div>
         </div>
       </aside>

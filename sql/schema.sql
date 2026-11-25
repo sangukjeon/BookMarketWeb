@@ -14,6 +14,9 @@ FLUSH PRIVILEGES;
 
 USE bookmarket;
 
+DROP TABLE IF EXISTS cart_item;
+DROP TABLE IF EXISTS member_coupon;
+DROP TABLE IF EXISTS member_address;
 DROP TABLE IF EXISTS review;
 DROP TABLE IF EXISTS wishlist;
 DROP TABLE IF EXISTS order_item;
@@ -35,7 +38,7 @@ CREATE TABLE member (
   provider      VARCHAR(10)  NOT NULL DEFAULT 'LOCAL' COMMENT 'LOCAL / GOOGLE / NAVER / KAKAO',
   provider_id   VARCHAR(100) NULL,
   role          VARCHAR(10)  NOT NULL DEFAULT 'USER'  COMMENT 'USER / ADMIN',
-  status        VARCHAR(10)  NOT NULL DEFAULT 'ACTIVE' COMMENT 'ACTIVE / SUSPENDED (정지되면 로그인 불가)',
+  status        VARCHAR(10)  NOT NULL DEFAULT 'ACTIVE' COMMENT 'ACTIVE / SUSPENDED(정지) / WITHDRAWN(탈퇴, 개인정보 지움)',
   created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (member_no),
   UNIQUE KEY uk_member_login (login_id),
@@ -50,9 +53,10 @@ CREATE TABLE book (
   unit_price   INT           NOT NULL,
   author       VARCHAR(200)  NULL,
   description  VARCHAR(1000) NULL,
-  category     VARCHAR(50)   NULL,
+  category     VARCHAR(50)   NULL     COMMENT '장르: 소설, 시/에세이, 인문, 경제/경영, 자기계발, 과학, IT/컴퓨터, 어린이, 만화, 여행',
   release_date VARCHAR(10)   NULL,
   image        VARCHAR(300)  NULL     COMMENT '파일 이름 또는 http 주소',
+  stock        INT           NOT NULL DEFAULT 20 COMMENT '재고 (0이면 품절)',
   publisher    VARCHAR(100)  NULL,
   source       VARCHAR(10)   NOT NULL DEFAULT 'LOCAL' COMMENT 'LOCAL / KAKAO (예전 ALADIN)',
   PRIMARY KEY (book_id)
@@ -133,15 +137,50 @@ CREATE TABLE review (
   CONSTRAINT ck_review_rating CHECK (rating BETWEEN 1 AND 5)
 ) ENGINE=InnoDB;
 
+-- 배송지 여러 개 (회원 1 : N, 최대 5개. 기본 배송지는 member.address에도 같이 저장)
+CREATE TABLE member_address (
+  address_id    BIGINT       NOT NULL AUTO_INCREMENT,
+  member_no     BIGINT       NOT NULL,
+  label         VARCHAR(20)  NOT NULL COMMENT '집, 회사 같은 이름',
+  receiver_name VARCHAR(50)  NOT NULL,
+  phone         VARCHAR(20)  NOT NULL,
+  address       VARCHAR(200) NOT NULL,
+  is_default    BOOLEAN      NOT NULL DEFAULT FALSE,
+  created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (address_id),
+  CONSTRAINT fk_addr_member FOREIGN KEY (member_no) REFERENCES member (member_no) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- 회원 쿠폰함 (회원 N : M 쿠폰). 주문서에서는 여기 등록한 쿠폰만 쓸 수 있다
+CREATE TABLE member_coupon (
+  member_no     BIGINT      NOT NULL,
+  code          VARCHAR(20) NOT NULL,
+  registered_at DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (member_no, code),
+  CONSTRAINT fk_mc_member FOREIGN KEY (member_no) REFERENCES member (member_no) ON DELETE CASCADE,
+  CONSTRAINT fk_mc_coupon FOREIGN KEY (code)      REFERENCES coupon (code)      ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- 장바구니 저장 (로그인한 회원의 장바구니를 다른 PC에서도 이어서)
+CREATE TABLE cart_item (
+  member_no  BIGINT      NOT NULL,
+  book_id    VARCHAR(20) NOT NULL,
+  quantity   INT         NOT NULL,
+  updated_at DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (member_no, book_id),
+  CONSTRAINT fk_cart_member FOREIGN KEY (member_no) REFERENCES member (member_no) ON DELETE CASCADE,
+  CONSTRAINT fk_cart_book   FOREIGN KEY (book_id)   REFERENCES book (book_id)     ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 -- ---------------------------------------------------------
 -- 처음 데이터
 -- ---------------------------------------------------------
 
 -- 원본 book.txt 3권
 INSERT INTO book (book_id, name, unit_price, author, description, category, release_date, image, publisher) VALUES
-('ISBN1234', '쉽게 배우는 JSP 웹 프로그래밍', 27000, '송미영', '단계별로 쇼핑몰을 구현하며 배우는 JSP 웹 프로그래밍', 'IT전문서', '2018/10/08', 'ISBN1234.jpg', '한빛아카데미'),
-('ISBN1235', '안드로이드 프로그래밍', 33000, '우재남', '실습 단계별 명쾌한 멘토링!', 'IT전문서', '2022/01/22', 'ISBN1235.jpg', '한빛아카데미'),
-('ISBN1236', '스크래치', 22000, '고광일', '컴퓨팅 사고력을 키우는 블록 코딩', '컴퓨터입문', '2019/06/10', 'ISBN1236.jpg', '한빛아카데미');
+('ISBN1234', '쉽게 배우는 JSP 웹 프로그래밍', 27000, '송미영', '단계별로 쇼핑몰을 구현하며 배우는 JSP 웹 프로그래밍', 'IT/컴퓨터', '2018/10/08', 'ISBN1234.jpg', '한빛아카데미'),
+('ISBN1235', '안드로이드 프로그래밍', 33000, '우재남', '실습 단계별 명쾌한 멘토링!', 'IT/컴퓨터', '2022/01/22', 'ISBN1235.jpg', '한빛아카데미'),
+('ISBN1236', '스크래치', 22000, '고광일', '컴퓨팅 사고력을 키우는 블록 코딩', 'IT/컴퓨터', '2019/06/10', 'ISBN1236.jpg', '한빛아카데미');
 
 -- 관리자 계정: admin / admin1234 (SHA-256 + salt 10,000회 반복)
 INSERT INTO member (login_id, password_hash, salt, name, phone, role)

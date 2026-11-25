@@ -10,7 +10,7 @@
 <c:choose>
   <c:when test="${empty orders}">
     <div class="card empty">
-      <div class="empty__icon"><ui:icon name="receipt" /></div>
+      <img class="empty__mascot" src="${ctx}/images/mascot/bear.png" alt="" width="132" height="120">
       <h2 class="t-title2">아직 주문한 책이 없어요</h2>
       <p class="t-body3 muted">주문하면 여기에서 영수증을 다시 볼 수 있어요.</p>
       <a class="btn btn-sub" href="${ctx}/books">도서 둘러보기</a>

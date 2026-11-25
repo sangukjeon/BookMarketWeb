@@ -30,7 +30,21 @@ public class CartServlet extends HttpServlet {
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		Web.cart(req);
+		Cart cart = Web.cart(req);
+		// 담아 둔 사이에 재고가 바뀌었을 수 있어서 화면을 보여 줄 때마다 최신 재고로 맞춘다
+		boolean stockProblem = false;
+		try {
+			for (com.market.cart.CartItem ci : cart.getItems()) {
+				Book fresh = bookDAO.findById(ci.getBookID());
+				if (fresh != null)
+					ci.getItemBook().setStock(fresh.getStock());
+				if (ci.getQuantity() > ci.getItemBook().getStock())
+					stockProblem = true;
+			}
+		} catch (SQLException e) {
+			throw new ServletException(e);
+		}
+		req.setAttribute("stockProblem", stockProblem);
 		Web.render(req, resp, "cart");
 	}
 
@@ -44,8 +58,16 @@ public class CartServlet extends HttpServlet {
 			case "/add": {
 				Book book = bookDAO.findById(id);
 				if (book != null) {
-					cart.insertBook(book);
-					Web.flash(req, "장바구니에 담았어요");
+					int inCart = quantityOf(cart, id);
+					if (book.isSoldOut()) {
+						Web.flash(req, "품절된 책이에요");
+					} else if (inCart >= book.getStock()) {
+						Web.flash(req, "재고가 " + book.getStock() + "권뿐이라 더 담을 수 없어요");
+					} else {
+						cart.insertBook(book);
+						Web.saveCart(req);
+						Web.flash(req, "장바구니에 담았어요");
+					}
 				}
 				// 상세 화면에서 "바로 구매"를 누르면 장바구니로, 아니면 원래 화면으로
 				if ("buy".equals(req.getParameter("then"))) {
@@ -55,9 +77,14 @@ public class CartServlet extends HttpServlet {
 				}
 				return;
 			}
-			case "/increase":
-				cart.isCartInBook(id);
+			case "/increase": {
+				Book book = bookDAO.findById(id);
+				if (book != null && quantityOf(cart, id) >= book.getStock())
+					Web.flash(req, "재고가 " + book.getStock() + "권뿐이에요");
+				else
+					cart.isCartInBook(id);
 				break;
+			}
 			case "/decrease":
 				cart.decreaseQuantity(id);
 				break;
@@ -76,6 +103,12 @@ public class CartServlet extends HttpServlet {
 		} catch (SQLException e) {
 			throw new ServletException(e);
 		}
+		Web.saveCart(req);
 		Web.redirect(req, resp, "/cart");
+	}
+
+	private static int quantityOf(Cart cart, String bookId) {
+		return cart.getItems().stream().filter(ci -> ci.getBookID().equals(bookId))
+				.mapToInt(com.market.cart.CartItem::getQuantity).sum();
 	}
 }

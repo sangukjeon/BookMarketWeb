@@ -23,6 +23,7 @@ public class BookDAO {
 				rs.getString("image"));
 		b.setPublisher(rs.getString("publisher"));
 		b.setSource(rs.getString("source"));
+		b.setStock(rs.getInt("stock"));
 		return b;
 	}
 
@@ -31,8 +32,17 @@ public class BookDAO {
 	 * 검색어가 없으면 tab(bestseller=판매량 순 / new=출판일 순), 있으면 sort(accuracy/latest/sales)
 	 */
 	public BookPage browse(String tab, String keyword, String sort, int page, int size) throws SQLException {
+		return browse(tab, keyword, sort, page, size, null);
+	}
+
+	/** genre(장르 이름, 예: "소설")가 있으면 그 장르 책만 */
+	public BookPage browse(String tab, String keyword, String sort, int page, int size, String genre)
+			throws SQLException {
 		boolean searching = keyword != null && !keyword.isBlank();
-		String where = searching ? " WHERE LOWER(b.name) LIKE ? OR LOWER(b.author) LIKE ? OR LOWER(b.publisher) LIKE ?" : "";
+		boolean byGenre = genre != null && !genre.isBlank();
+		String where = searching ? " WHERE (LOWER(b.name) LIKE ? OR LOWER(b.author) LIKE ? OR LOWER(b.publisher) LIKE ?)" : "";
+		if (byGenre)
+			where += (where.isEmpty() ? " WHERE" : " AND") + " b.category = ?";
 		String order;
 		if (searching) {
 			order = switch (sort == null ? "" : sort) {
@@ -52,9 +62,12 @@ public class BookDAO {
 		result.setPage(page);
 		try (Connection con = DBUtil.getConnection()) {
 			try (PreparedStatement ps = con.prepareStatement("SELECT COUNT(*) FROM book b" + where)) {
+				int n = 1;
 				if (searching)
-					for (int i = 1; i <= 3; i++)
-						ps.setString(i, like);
+					for (int i = 0; i < 3; i++)
+						ps.setString(n++, like);
+				if (byGenre)
+					ps.setString(n, genre);
 				try (ResultSet rs = ps.executeQuery()) {
 					rs.next();
 					result.setTotal(rs.getInt(1));
@@ -67,6 +80,10 @@ public class BookDAO {
 				if (searching) {
 					for (int i = 0; i < 3; i++)
 						ps.setString(n++, like);
+				}
+				if (byGenre)
+					ps.setString(n++, genre);
+				if (searching) {
 					if (order.contains("LIKE ?")) {
 						ps.setString(n++, kw + "%");
 						ps.setString(n++, like);
@@ -81,6 +98,36 @@ public class BookDAO {
 			}
 		}
 		return result;
+	}
+
+	/** 장르별 책 수 (사이드바 숫자) */
+	public java.util.Map<String, Integer> countByGenre() throws SQLException {
+		java.util.Map<String, Integer> map = new java.util.HashMap<>();
+		try (Connection con = DBUtil.getConnection();
+				PreparedStatement ps = con.prepareStatement("SELECT category, COUNT(*) AS cnt FROM book WHERE category IS NOT NULL GROUP BY category");
+				ResultSet rs = ps.executeQuery()) {
+			while (rs.next())
+				map.put(rs.getString("category"), rs.getInt("cnt"));
+		}
+		return map;
+	}
+
+	/** 같은 장르의 다른 책 (많이 팔린 순) — 도서 상세 아래 추천 */
+	public List<Book> sameGenre(String category, String exceptBookId, int limit) throws SQLException {
+		List<Book> list = new ArrayList<>();
+		if (category == null || category.isBlank())
+			return list;
+		try (Connection con = DBUtil.getConnection(); PreparedStatement ps = con.prepareStatement(
+				"SELECT b.*, " + SOLD + " AS sold FROM book b WHERE b.category = ? AND b.book_id <> ? ORDER BY sold DESC, b.release_date DESC LIMIT ?")) {
+			ps.setString(1, category);
+			ps.setString(2, exceptBookId);
+			ps.setInt(3, limit);
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next())
+					list.add(map(rs));
+			}
+		}
+		return list;
 	}
 
 	/** 관리자 목록: 전체 */
@@ -119,7 +166,7 @@ public class BookDAO {
 				PreparedStatement ins = con.prepareStatement(
 						"INSERT INTO book (book_id, name, unit_price, author, description, category, release_date, image, publisher, source) VALUES (?,?,?,?,?,?,?,?,?,?)");
 				PreparedStatement upd = con.prepareStatement(
-						"UPDATE book SET name=?, unit_price=?, author=?, description=?, category=?, release_date=?, image=?, publisher=? WHERE book_id=? AND source <> 'LOCAL'")) {
+						"UPDATE book SET name=?, unit_price=?, author=?, description=?, category=COALESCE(category, ?), release_date=?, image=?, publisher=? WHERE book_id=? AND source <> 'LOCAL'")) {
 			for (Book b : books) {
 				find.setString(1, b.getBookId());
 				boolean exists;
@@ -136,7 +183,7 @@ public class BookDAO {
 					upd.setInt(2, b.getUnitPrice());
 					upd.setString(3, b.getAuthor());
 					upd.setString(4, b.getDescription());
-					upd.setString(5, b.getCategory()); // 카카오는 분야를 주지 않아 null
+					upd.setString(5, b.getCategory()); // 이미 장르가 있으면(관리자가 고친 값 포함) 그대로 두고, 없을 때만 장르 화면에서 붙인 값으로
 					upd.setString(6, b.getReleaseDate());
 					upd.setString(7, b.getImage());
 					upd.setString(8, b.getPublisher());
@@ -149,16 +196,17 @@ public class BookDAO {
 
 	public void insert(Book b) throws SQLException {
 		try (Connection con = DBUtil.getConnection(); PreparedStatement ps = con.prepareStatement(
-				"INSERT INTO book (book_id, name, unit_price, author, description, category, release_date, image, publisher, source) VALUES (?,?,?,?,?,?,?,?,?,'LOCAL')")) {
+				"INSERT INTO book (book_id, name, unit_price, author, description, category, release_date, image, publisher, stock, source) VALUES (?,?,?,?,?,?,?,?,?,?,'LOCAL')")) {
 			bind(ps, b);
 			ps.setString(9, b.getPublisher());
+			ps.setInt(10, b.getStock());
 			ps.executeUpdate();
 		}
 	}
 
 	public void update(Book b) throws SQLException {
 		try (Connection con = DBUtil.getConnection(); PreparedStatement ps = con.prepareStatement(
-				"UPDATE book SET name=?, unit_price=?, author=?, description=?, category=?, release_date=?, image=?, publisher=? WHERE book_id=?")) {
+				"UPDATE book SET name=?, unit_price=?, author=?, description=?, category=?, release_date=?, image=?, publisher=?, stock=? WHERE book_id=?")) {
 			ps.setString(1, b.getName());
 			ps.setInt(2, b.getUnitPrice());
 			ps.setString(3, b.getAuthor());
@@ -167,7 +215,8 @@ public class BookDAO {
 			ps.setString(6, b.getReleaseDate());
 			ps.setString(7, b.getImage());
 			ps.setString(8, b.getPublisher());
-			ps.setString(9, b.getBookId());
+			ps.setInt(9, b.getStock());
+			ps.setString(10, b.getBookId());
 			ps.executeUpdate();
 		}
 	}

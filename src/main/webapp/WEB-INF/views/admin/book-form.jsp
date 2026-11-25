@@ -33,9 +33,16 @@
         <input class="input" id="author" name="author" value="<c:out value='${book.author}'/>">
       </div>
       <div class="field">
-        <label for="category">분야</label>
-        <input class="input" id="category" name="category" value="<c:out value='${book.category}'/>" placeholder="IT전문서" list="cats">
-        <datalist id="cats"><option value="IT전문서"><option value="컴퓨터입문"></datalist>
+        <label for="category">장르</label>
+        <select class="input" id="category" name="category">
+          <option value="">정하지 않음</option>
+          <c:forEach var="g" items="${genres}"><option value="${g.label}" ${book.category == g.label ? 'selected' : ''}>${g.label}</option></c:forEach>
+        </select>
+      </div>
+      <div class="field">
+        <label for="stock">재고</label>
+        <input class="input num" id="stock" name="stock" type="number" min="0" max="9999" value="${empty book ? 20 : book.stock}" aria-describedby="stockHelp" required>
+        <span class="help" id="stockHelp">0으로 두면 품절로 보여요</span>
       </div>
     </div>
     <div class="field-grid field-grid--2" style="margin-top:16px">

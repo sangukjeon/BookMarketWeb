@@ -9,7 +9,7 @@
   <div class="tbl-wrap">
     <table class="tbl">
       <caption class="sr-only">쿠폰 목록</caption>
-      <thead><tr><th scope="col">쿠폰 번호</th><th scope="col">이름</th><th scope="col">혜택</th><th scope="col" class="r">최소 금액</th><th scope="col">상태</th><th scope="col" class="r">관리</th></tr></thead>
+      <thead><tr><th scope="col">쿠폰 번호</th><th scope="col">이름</th><th scope="col">혜택</th><th scope="col" class="r">최소 금액</th><th scope="col" class="r">등록 / 사용</th><th scope="col">상태</th><th scope="col" class="r">관리</th></tr></thead>
       <tbody>
         <c:forEach var="cp" items="${coupons}">
           <tr>
@@ -17,6 +17,7 @@
             <td><c:out value="${cp.name}" /></td>
             <td class="nowrap">${cp.benefitLabel}<c:if test="${not empty cp.maxDiscount}"><br><span class="t-help">최대 <fmt:formatNumber value="${cp.maxDiscount}" pattern="#,##0" />원</span></c:if></td>
             <td class="r nowrap"><fmt:formatNumber value="${cp.minAmount}" pattern="#,##0" />원</td>
+            <td class="r nowrap num">${cp.registeredCount} / ${cp.usedCount}</td>
             <td class="nowrap">
               <c:choose>
                 <c:when test="${cp.active}"><span class="pill pill--success">쓸 수 있음</span></c:when>
@@ -33,7 +34,7 @@
             </td>
           </tr>
         </c:forEach>
-        <c:if test="${empty coupons}"><tr class="empty-row"><td colspan="6">아직 만든 쿠폰이 없어요</td></tr></c:if>
+        <c:if test="${empty coupons}"><tr class="empty-row"><td colspan="7">아직 만든 쿠폰이 없어요</td></tr></c:if>
       </tbody>
     </table>
   </div>

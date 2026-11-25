@@ -79,14 +79,14 @@ public class AdminServlet extends HttpServlet {
 				Web.render(req, resp, "admin/book-form");
 				break;
 			case "/admin/coupons":
-				req.setAttribute("coupons", couponDAO.findAll());
+				req.setAttribute("coupons", couponDAO.findAllWithStats());
 				Web.render(req, resp, "admin/coupons");
 				break;
 			case "/admin/members":
 				String q = Web.trim(req.getParameter("q"));
 				String provider = oneOf(req.getParameter("provider"), "LOCAL", "KAKAO", "NAVER", "GOOGLE");
 				String role = oneOf(req.getParameter("role"), "USER", "ADMIN");
-				String mstatus = oneOf(req.getParameter("status"), "ACTIVE", "SUSPENDED");
+				String mstatus = oneOf(req.getParameter("status"), "ACTIVE", "SUSPENDED", "WITHDRAWN");
 				req.setAttribute("q", q);
 				req.setAttribute("provider", provider);
 				req.setAttribute("role", role);
@@ -222,9 +222,10 @@ public class AdminServlet extends HttpServlet {
 		boolean editing = "true".equals(req.getParameter("editing"));
 		Book b = new Book(Web.trim(req.getParameter("bookId")).toUpperCase(), Web.trim(req.getParameter("name")),
 				Web.toInt(req.getParameter("unitPrice"), -1), Web.trim(req.getParameter("author")),
-				Web.trim(req.getParameter("description")), Web.trim(req.getParameter("category")),
+				Web.trim(req.getParameter("description")), Web.trim(req.getParameter("category")).isEmpty() ? null : Web.trim(req.getParameter("category")),
 				Web.trim(req.getParameter("releaseDate")).replace('-', '/'), null);
 		b.setPublisher(Web.trim(req.getParameter("publisher")));
+		b.setStock(Web.toInt(req.getParameter("stock"), -1));
 		String image = Web.trim(req.getParameter("image"));
 		String error = null;
 		if (!editing && !b.getBookId().matches("ISBN[0-9]{4,13}|[0-9]{10}|[0-9]{13}"))
@@ -235,6 +236,10 @@ public class AdminServlet extends HttpServlet {
 			error = "표지는 http 주소나 images/books 안의 파일 이름으로 넣어 주세요.";
 		else if (b.getUnitPrice() < 0)
 			error = "가격은 0 이상의 숫자로 입력해 주세요.";
+		else if (b.getStock() < 0 || b.getStock() > 9999)
+			error = "재고는 0~9,999 사이 숫자로 입력해 주세요. 0이면 품절로 보여요.";
+		else if (b.getCategory() != null && com.market.dto.Genre.byLabel(b.getCategory()) == null)
+			error = "장르는 목록에서 골라 주세요.";
 		else if (!editing && bookDAO.findById(b.getBookId()) != null)
 			error = "이미 있는 도서 ID예요. 다른 번호를 써 주세요.";
 
@@ -285,7 +290,7 @@ public class AdminServlet extends HttpServlet {
 		if (error != null) {
 			req.setAttribute("error", error);
 			req.setAttribute("form", c);
-			req.setAttribute("coupons", couponDAO.findAll());
+			req.setAttribute("coupons", couponDAO.findAllWithStats());
 			Web.render(req, resp, "admin/coupons");
 			return;
 		}

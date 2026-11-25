@@ -98,3 +98,21 @@ document.addEventListener('change', function (e) {
   var out = r.closest('.star-field') && r.closest('.star-field').querySelector('.star-field__score');
   if (out) out.textContent = r.value + '점';
 });
+
+/* 주문서: 저장한 배송지 칩을 누르면 받는 분·연락처·주소를 채운다 */
+document.addEventListener('click', function (e) {
+  var b = e.target.closest && e.target.closest('[data-addr]');
+  if (!b) return;
+  var set = function (id, v) { var el = document.getElementById(id); if (el) el.value = v || ''; };
+  set('receiverName', b.getAttribute('data-name'));
+  set('receiverPhone', b.getAttribute('data-phone'));
+  set('address', b.getAttribute('data-address'));
+  document.querySelectorAll('[data-addr]').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+  document.querySelectorAll('[data-fill]').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
+});
+
+/* 모바일 장르 칩: 고른 장르가 보이게 가로 스크롤 */
+(function () {
+  var cur = document.querySelector('.genre-chips [aria-current="true"]');
+  if (cur && cur.parentNode.scrollTo) cur.parentNode.scrollTo({ left: cur.offsetLeft - 16 });
+})();

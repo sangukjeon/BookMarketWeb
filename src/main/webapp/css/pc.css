@@ -188,3 +188,12 @@
   .wish-item__actions .heart { background: var(--surface); box-shadow: var(--shadow-fab); }
   .wish-item .book-card__title { padding-right: 0 !important; }
 }
+
+@media (min-width: 1024px) {
+  .shop-hero { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: var(--sp-6); row-gap: var(--sp-4); }
+  .shop-hero__mascot { width: 112px; height: auto; grid-row: span 2; margin: -8px 0 -12px -8px; }
+  .shop-hero .chips { justify-content: flex-start; max-width: none; }
+  .shop-head { margin-top: var(--sp-6); }
+  .side { max-height: calc(100vh - 68px - var(--sp-6) * 2); overflow-y: auto; scrollbar-width: thin; }
+  .side__nav--genre a { min-height: 36px; font-size: 14px; }
+}

@@ -13,7 +13,7 @@
   <div class="detail__info">
     <div class="row-between" style="align-items:flex-start">
       <div>
-        <c:if test="${not empty book.category}"><ui:cat name="${book.category}" /></c:if>
+        <c:if test="${not empty book.genre}"><a href="${ctx}/books?genre=${book.genre.slug}" style="text-decoration:none"><ui:cat name="${book.category}" /></a></c:if>
         <h1 class="t-heading" style="margin:8px 0 4px"><c:out value="${book.name}" /></h1>
         <p class="t-body3 muted"><c:out value="${book.author}" /><c:if test="${not empty book.publisher}"> · <c:out value="${book.publisher}" /></c:if></p>
       </div>
@@ -43,7 +43,8 @@
       <dl>
         <dt>ISBN</dt><dd class="num"><c:out value="${book.bookId}" /></dd>
         <c:if test="${not empty book.publisher}"><dt>출판사</dt><dd><c:out value="${book.publisher}" /></dd></c:if>
-        <dt>분야</dt><dd><c:out value="${empty book.category ? '-' : book.category}" /></dd>
+        <dt>장르</dt><dd><c:choose><c:when test="${not empty book.genre}"><a href="${ctx}/books?genre=${book.genre.slug}"><c:out value="${book.category}" /></a></c:when><c:otherwise>-</c:otherwise></c:choose></dd>
+        <dt>재고</dt><dd><c:choose><c:when test="${book.soldOut}"><span class="pill pill--danger">품절</span></c:when><c:when test="${book.lowStock}"><span class="pill pill--warn">${book.stock}권 남았어요</span></c:when><c:otherwise>${book.stock}권</c:otherwise></c:choose></dd>
         <dt>출판일</dt><dd class="num"><c:out value="${book.releaseDate}" /></dd>
         <dt>배송</dt><dd>3만 원 이상 주문하면 배송비가 무료예요</dd>
       </dl>
@@ -117,7 +118,23 @@
       </c:choose>
     </section>
 
-
+    <c:if test="${not empty sameGenre}">
+      <section class="same-genre" aria-labelledby="same-title">
+        <div class="row-between" style="margin-bottom:12px">
+          <h2 class="t-title2" id="same-title">같은 장르의 다른 책</h2>
+          <a class="text-btn" href="${ctx}/books?genre=${book.genre.slug}">${book.category} 더 보기<ui:icon name="chevron-right" cls="icon-sm" /></a>
+        </div>
+        <ul class="same-genre__list">
+          <c:forEach var="sb" items="${sameGenre}">
+            <li><a href="${ctx}/books/detail?id=${fn:escapeXml(sb.bookId)}">
+              <span class="cover"><c:set var="coverBook" value="${sb}" /><%@ include file="/WEB-INF/views/common/cover.jspf" %></span>
+              <span class="same-genre__name"><c:out value="${sb.name}" /></span>
+              <span class="t-help num"><fmt:formatNumber value="${sb.unitPrice}" pattern="#,##0" />원</span>
+            </a></li>
+          </c:forEach>
+        </ul>
+      </section>
+    </c:if>
   </div>
   <aside class="buybox" aria-label="구매">
     <div class="card pc-only">
@@ -125,7 +142,8 @@
       <p class="buybox__price"><fmt:formatNumber value="${book.unitPrice}" pattern="#,##0" /><small>원</small></p>
       <dl class="buybox__rows">
         <div><dt>배송비</dt><dd>${book.unitPrice >= 30000 ? '무료' : '3,000원 (3만 원 이상 무료)'}</dd></div>
-        <div><dt>쿠폰</dt><dd>주문서에서 쓸 수 있어요</dd></div>
+        <div><dt>쿠폰</dt><dd>쿠폰함 쿠폰을 주문서에서</dd></div>
+        <div><dt>재고</dt><dd>${book.soldOut ? '품절' : (book.lowStock ? book.stock.toString().concat('권 남았어요') : '있어요')}</dd></div>
         <div><dt>리뷰</dt><dd><c:choose><c:when test="${empty reviews}">아직 없어요</c:when><c:otherwise><span class="num" style="display:inline-flex;align-items:center;gap:2px"><ui:icon name="star" cls="icon-sm star-on" />${avgRating}</span> · ${fn:length(reviews)}개</c:otherwise></c:choose></dd></div>
       </dl>
       <form class="plate" method="post" action="${ctx}/cart/add">
@@ -133,8 +151,13 @@
       <input type="hidden" name="id" value="<c:out value='${book.bookId}'/>">
       <input type="hidden" name="next" value="${selfPath}">
       <div class="plate__inner">
+        <c:choose>
+          <c:when test="${book.soldOut}"><button class="btn btn-main btn-soldout" type="button" disabled>품절이에요</button></c:when>
+          <c:otherwise>
         <button class="btn btn-sub" type="submit" name="then" value="stay" aria-label="장바구니에 담기"><ui:icon name="shopping-cart" />담기</button>
         <button class="btn btn-main" type="submit" name="then" value="buy">바로 구매하기</button>
+          </c:otherwise>
+        </c:choose>
       </div>
     </form>
     </div>
@@ -144,8 +167,13 @@
       <input type="hidden" name="id" value="<c:out value='${book.bookId}'/>">
       <input type="hidden" name="next" value="${selfPath}">
       <div class="plate__inner">
+        <c:choose>
+          <c:when test="${book.soldOut}"><button class="btn btn-main btn-soldout" type="button" disabled>품절이에요</button></c:when>
+          <c:otherwise>
         <button class="btn btn-sub" type="submit" name="then" value="stay" aria-label="장바구니에 담기"><ui:icon name="shopping-cart" />담기</button>
         <button class="btn btn-main" type="submit" name="then" value="buy">바로 구매하기</button>
+          </c:otherwise>
+        </c:choose>
       </div>
     </form>
     </div>

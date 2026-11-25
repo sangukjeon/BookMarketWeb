@@ -23,7 +23,7 @@
       </div>
       <div class="row" style="gap:6px">
         <c:if test="${target.admin}"><span class="pill pill--warn">관리자</span></c:if>
-        <c:choose><c:when test="${target.suspended}"><span class="pill pill--danger">정지됨</span></c:when><c:otherwise><span class="pill pill--success">정상</span></c:otherwise></c:choose>
+        <c:choose><c:when test="${target.withdrawn}"><span class="pill pill--neutral">탈퇴함</span></c:when><c:when test="${target.suspended}"><span class="pill pill--danger">정지됨</span></c:when><c:otherwise><span class="pill pill--success">정상</span></c:otherwise></c:choose>
       </div>
     </div>
     <dl class="kv" style="margin-top:20px">

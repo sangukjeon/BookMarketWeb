@@ -120,7 +120,11 @@ public class MemberDAO {
 					m.setMemberNo(rs.getLong(1));
 			}
 		}
+		// 가입 선물: 환영 쿠폰을 쿠폰함에 넣어 준다 (자체·소셜 가입 모두)
+		new CouponDAO().grant(m.getMemberNo(), WELCOME_COUPON);
 	}
+
+	public static final String WELCOME_COUPON = "WELCOME10";
 
 	public void updateProfile(Member m) throws SQLException {
 		try (Connection con = DBUtil.getConnection(); PreparedStatement ps = con
@@ -221,6 +225,65 @@ public class MemberDAO {
 			for (int i = 0; i < params.length; i++)
 				ps.setObject(i + 1, params[i]);
 			return ps.executeUpdate() > 0;
+		}
+	}
+
+	// ===================== 마이페이지: 비밀번호 변경 · 탈퇴 =====================
+
+	/** 지금 비밀번호가 맞을 때만 새 비밀번호로 바꾼다 (자체 가입 회원만). 바꿨으면 true */
+	public boolean changePassword(long memberNo, String current, String next) throws SQLException {
+		Member m = findByNo(memberNo);
+		if (m == null || m.isSocial() || !PasswordUtil.matches(current, m.getSalt(), m.getPasswordHash()))
+			return false;
+		String salt = PasswordUtil.newSalt();
+		return update("UPDATE member SET password_hash = ?, salt = ? WHERE member_no = ?", PasswordUtil.hash(next, salt),
+				salt, memberNo);
+	}
+
+	/** 자체 가입 회원의 비밀번호 확인 (탈퇴 확인용) */
+	public boolean checkPassword(long memberNo, String password) throws SQLException {
+		Member m = findByNo(memberNo);
+		return m != null && !m.isSocial() && PasswordUtil.matches(password, m.getSalt(), m.getPasswordHash());
+	}
+
+	/** 배송이 끝나지 않은 주문(주문완료·준비 중·배송 중)이 있으면 탈퇴할 수 없다 */
+	public boolean hasOpenOrders(long memberNo) throws SQLException {
+		try (Connection con = DBUtil.getConnection(); PreparedStatement ps = con.prepareStatement(
+				"SELECT 1 FROM orders WHERE member_no = ? AND status IN ('ORDERED', 'PREPARING', 'SHIPPING')")) {
+			ps.setLong(1, memberNo);
+			try (ResultSet rs = ps.executeQuery()) {
+				return rs.next();
+			}
+		}
+	}
+
+	/**
+	 * 회원 탈퇴: 주문·리뷰 기록(매출)은 남기고 개인정보만 지운다.
+	 * 아이디·소셜 연결을 끊어서 같은 아이디·같은 소셜 계정으로 새로 가입할 수 있다.
+	 * 찜·장바구니·쿠폰함·배송지는 지운다. 하나의 트랜잭션으로 처리.
+	 */
+	public void withdraw(long memberNo) throws SQLException {
+		try (Connection con = DBUtil.getConnection()) {
+			con.setAutoCommit(false);
+			try {
+				for (String t : new String[] { "wishlist", "cart_item", "member_coupon", "member_address" })
+					try (PreparedStatement ps = con.prepareStatement("DELETE FROM " + t + " WHERE member_no = ?")) {
+						ps.setLong(1, memberNo);
+						ps.executeUpdate();
+					}
+				try (PreparedStatement ps = con.prepareStatement(
+						"UPDATE member SET login_id = ?, password_hash = NULL, salt = NULL, name = ?, phone = NULL, address = NULL, "
+								+ "email = NULL, provider_id = NULL, role = 'USER', status = 'WITHDRAWN' WHERE member_no = ?")) {
+					ps.setString(1, "withdrawn_" + memberNo);
+					ps.setString(2, "탈퇴한 회원");
+					ps.setLong(3, memberNo);
+					ps.executeUpdate();
+				}
+				con.commit();
+			} catch (SQLException e) {
+				con.rollback();
+				throw e;
+			}
 		}
 	}
 }

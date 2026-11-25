@@ -5,7 +5,7 @@
   <div class="container ${containerCls}">
     <div class="footer__cols pc-only">
       <div class="footer__brand">
-        <span class="logo__name">전상욱 마켓</span>
+        <span class="logo__name">윤상문고</span>
         <p>교재 BookMarketSwing을 톰캣 웹으로 옮긴 연습용 온라인 서점이에요.<br>실제 결제는 일어나지 않아요.</p>
       </div>
       <nav aria-label="쇼핑">
@@ -14,14 +14,14 @@
       </nav>
       <nav aria-label="내 계정">
         <h2>내 계정</h2>
-        <a href="${ctx}/orders">주문 내역</a><a href="${ctx}/wishlist">찜한 책</a><a href="${ctx}/mypage">내 정보</a>
+        <a href="${ctx}/orders">주문 내역</a><a href="${ctx}/wishlist">찜한 책</a><a href="${ctx}/coupons">쿠폰함</a><a href="${ctx}/mypage">내 정보</a>
       </nav>
       <div>
         <h2>프로젝트</h2>
         <p>웹 프로그래밍 팀 과제<br>Tomcat 10.1 · JSP/Servlet · JDBC<br>도서 검색: 카카오 책 검색 API</p>
       </div>
     </div>
-    <p class="m-only">전상욱 마켓은 웹 프로그래밍 팀 과제로 만든 연습용 서점이에요. 실제 결제는 일어나지 않아요.</p>
+    <p class="m-only">윤상문고는 웹 프로그래밍 팀 과제로 만든 연습용 서점이에요. 실제 결제는 일어나지 않아요.</p>
   </div>
 </footer>
 
@@ -40,6 +40,7 @@
     <a href="${ctx}/cart" ${nav == 'cart' ? 'aria-current="page"' : ''}><ui:icon name="shopping-cart" />장바구니<span class="muted num">${cartCount}권</span></a>
     <a href="${ctx}/orders" ${nav == 'orders' ? 'aria-current="page"' : ''}><ui:icon name="receipt" />주문 내역</a>
     <a href="${ctx}/wishlist" ${nav == 'wishlist' ? 'aria-current="page"' : ''}><ui:icon name="heart" />찜한 책</a>
+    <a href="${ctx}/coupons" ${nav == 'coupons' ? 'aria-current="page"' : ''}><ui:icon name="ticket-percent" />쿠폰함</a>
     <a href="${ctx}/mypage" ${nav == 'mypage' ? 'aria-current="page"' : ''}><ui:icon name="user-round" />내 정보</a>
     <c:if test="${me.admin}"><a href="${ctx}/admin" ${nav == 'admin' ? 'aria-current="page"' : ''}><ui:icon name="settings" />관리자</a></c:if>
     <c:choose>

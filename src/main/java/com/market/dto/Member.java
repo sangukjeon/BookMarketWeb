@@ -20,6 +20,7 @@ public class Member extends Person {
 	public boolean isAdmin() { return "ADMIN".equals(role); }
 	public boolean isSocial() { return !"LOCAL".equals(provider); }
 	public boolean isSuspended() { return "SUSPENDED".equals(status); }
+	public boolean isWithdrawn() { return "WITHDRAWN".equals(status); }
 
 	/** 화면용 가입 경로 이름 */
 	public String getProviderLabel() {
@@ -27,7 +28,7 @@ public class Member extends Person {
 		case "GOOGLE": return "구글";
 		case "NAVER": return "네이버";
 		case "KAKAO": return "카카오";
-		default: return "전상욱 마켓";
+		default: return "윤상문고";
 		}
 	}
 

@@ -57,6 +57,17 @@ public class OrderDAO {
 					}
 					ps.executeBatch();
 				}
+				// 재고 차감: 남은 재고가 주문 수량 이상일 때만 줄인다. 하나라도 모자라면 주문 전체를 되돌린다
+				try (PreparedStatement ps = con.prepareStatement(
+						"UPDATE book SET stock = stock - ? WHERE book_id = ? AND stock >= ?")) {
+					for (OrderItem it : o.getItems()) {
+						ps.setInt(1, it.getQuantity());
+						ps.setString(2, it.getBookId());
+						ps.setInt(3, it.getQuantity());
+						if (ps.executeUpdate() != 1)
+							throw new OutOfStockException(it.getBookName());
+					}
+				}
 				con.commit();
 				o.setOrderId(orderId);
 				return orderId;
@@ -167,12 +178,32 @@ public class OrderDAO {
 	public boolean cancel(long orderId, long memberNo) throws SQLException {
 		String sql = "UPDATE orders SET status = 'CANCELLED', cancelled_at = ? WHERE order_id = ? AND status IN ('ORDERED', 'PREPARING')"
 				+ (memberNo > 0 ? " AND member_no = ?" : "");
-		try (Connection con = DBUtil.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
-			ps.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now(ZoneId.of("Asia/Seoul")).withNano(0)));
-			ps.setLong(2, orderId);
-			if (memberNo > 0)
-				ps.setLong(3, memberNo);
-			return ps.executeUpdate() == 1;
+		try (Connection con = DBUtil.getConnection()) {
+			con.setAutoCommit(false); // 상태 변경 + 재고 되돌리기를 한 번에
+			try {
+				int changed;
+				try (PreparedStatement ps = con.prepareStatement(sql)) {
+					ps.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now(ZoneId.of("Asia/Seoul")).withNano(0)));
+					ps.setLong(2, orderId);
+					if (memberNo > 0)
+						ps.setLong(3, memberNo);
+					changed = ps.executeUpdate();
+				}
+				if (changed == 1) {
+					try (PreparedStatement ps = con.prepareStatement(
+							"UPDATE book SET stock = stock + (SELECT i.quantity FROM order_item i WHERE i.order_id = ? AND i.book_id = book.book_id) "
+									+ "WHERE book_id IN (SELECT book_id FROM order_item WHERE order_id = ?)")) {
+						ps.setLong(1, orderId);
+						ps.setLong(2, orderId);
+						ps.executeUpdate();
+					}
+				}
+				con.commit();
+				return changed == 1;
+			} catch (SQLException e) {
+				con.rollback();
+				throw e;
+			}
 		}
 	}
 

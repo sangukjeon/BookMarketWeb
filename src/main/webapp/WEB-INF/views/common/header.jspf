@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title><c:out value="${title}" /> | 전상욱 마켓</title>
+<title><c:out value="${title}" /> | 윤상문고</title>
 <script>
   try {
     var t = localStorage.getItem('theme')
@@ -16,15 +16,16 @@
 <link rel="stylesheet" href="${ctx}/css/base.css">
 <link rel="stylesheet" href="${ctx}/css/components.css">
 <link rel="stylesheet" href="${ctx}/css/pc.css">
-<link rel="icon" href="data:,">
+<link rel="icon" type="image/png" sizes="32x32" href="${ctx}/images/mascot/favicon-32.png">
+<link rel="apple-touch-icon" href="${ctx}/images/mascot/apple-touch-icon.png">
 </head>
 <body class="${plate ? 'has-plate' : ''}">
 <a class="skip-link" href="#main">본문으로 건너뛰기</a>
 
 <header class="topbar">
   <div class="container ${containerCls == 'container--wide' ? 'container--wide' : ''}">
-    <a class="logo" href="${ctx}/books" aria-label="전상욱 마켓 처음으로">
-      <span class="logo__name">전상욱 마켓</span><span class="logo__sub">온라인 서점</span>
+    <a class="logo" href="${ctx}/books" aria-label="윤상문고 처음으로">
+      <img class="logo__mark" src="${ctx}/images/mascot/bear-face.png" alt="" width="34" height="34"><span class="logo__name">윤상문고</span><span class="logo__sub">온라인 서점</span>
     </a>
     <nav class="topbar__links" aria-label="주 메뉴">
       <a href="${ctx}/books" ${nav == 'books' and tab != 'new' ? 'aria-current="page"' : ''}>베스트셀러</a>
