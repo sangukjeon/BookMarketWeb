@@ -24,13 +24,14 @@ src/main/java/
   db.properties          DB 접속 정보 (DBUtil이 클래스패스에서 읽음). 비밀번호가 들어가므로 **.gitignore 대상** (example을 복사해서 만든다)
   db.properties.example  접속 예시: A. Supabase / B. 내 PC MySQL
   api.properties         카카오 REST API 키 (비어 있으면 DB 모드). .gitignore 대상, 예시는 api.properties.example
+  oauth.properties       소셜 로그인 클라이언트 ID·시크릿 (비어 있는 제공자는 목업). .gitignore 대상, 예시는 oauth.properties.example
   com/market/
     controller/  서블릿 (@WebServlet). 요청 → DAO → request 속성 → Web.render("뷰이름")
     api/         BookCatalog(검색은 카카오, 탭은 DB), KakaoBookClient, BookPage. AladinClient.java는 알라딘 서비스 종료(2026-11-01)로 쓰지 않음 — 지워도 됨
     dao/         JDBC. 모든 SQL은 PreparedStatement. OrderDAO.insert는 트랜잭션
     dto/         Item, Book, Person, Member, Order, OrderItem, Coupon, Review
     cart/        세션 장바구니 (원본 유지)
-    oauth/       SocialProvider 인터페이스 + MockSocialProvider (구글·네이버·카카오 목업)
+    oauth/       SocialProvider ← OAuth2Provider(Kakao·Naver·GoogleOAuthProvider, 실제 연동) / MockSocialProvider(키 없을 때). SocialProviders가 oauth.properties를 보고 고른다
     filter/      EncodingFilter, SecurityFilter (web.xml에 순서대로 등록, @WebFilter 쓰지 않음)
     util/        DBUtil(DBCP 연결 풀, getConnection()은 풀에서 빌림), DBShutdownListener(web.xml 등록, 종료 시 풀 닫기),
                  PasswordUtil(SHA-256+salt 10,000회, tempPassword), MemberSessions(관리자가 바꾼 회원의 세션을 다음 요청에서 DB로 다시 읽게 함), MiniJson, Web(render·redirect·flash·login)
@@ -60,7 +61,7 @@ docs/              DESIGN.md, erd.png, architecture.png, screens/, src/(다이�
   ```
   (macOS/Linux는 클래스패스 구분자가 `;` 대신 `:`)
   배포는 `src/main/webapp` 전체 + `build/classes` + `db.properties`, `api.properties`를 `<톰캣>/webapps/BookMarketWeb/`(`WEB-INF/classes`)에 복사.
-- **테스트:** DB 초기화 → 톰캣 실행 → `python tests/e2e.py` (63개) → `python tests/e2e_members.py` (회원 관리 33개) → `python tests/e2e_shipping.py` (배송·별점 24개). 카카오 검색은 `tests/fake_kakao.py` + `tests/e2e_kakao.py` (13개, tests/README.md).
+- **테스트:** DB 초기화 → 톰캣 실행 → `python tests/e2e.py` (64개) → `python tests/e2e_members.py` (회원 관리 33개) → `python tests/e2e_shipping.py` (배송·별점 24개). 소셜 로그인 실제 흐름은 `tests/fake_oauth.py` + `tests/e2e_oauth.py` (19개). 카카오 검색은 `tests/fake_kakao.py` + `tests/e2e_kakao.py` (13개, tests/README.md).
 
 ## 꼭 지킬 것 (실제로 겪은 함정)
 - **JSTL URI**는 `http://java.sun.com/jsp/jstl/core` 형식. `jakarta.tags.core`는 이 jar에서 동작하지 않는다.
@@ -87,6 +88,7 @@ docs/              DESIGN.md, erd.png, architecture.png, screens/, src/(다이�
 - 리뷰: 그 책을 산(취소 안 된) 회원만, 책 1권에 1개 (`uk_review_once`).
 - `member.status`: `ACTIVE` / `SUSPENDED`. 정지 회원은 자체·소셜 로그인 모두 막고(비밀번호가 맞을 때만 "정지" 안내), 로그인 중이면 `SecurityFilter`가 다음 요청에서 로그아웃시킨다. 관리자가 회원 상태·권한을 바꾸면 반드시 `MemberSessions.changed(memberNo)`를 부른다.
 - 회원 관리(`/admin/members`): 관리자는 **자기 계정의 상태·권한을 바꿀 수 없다**(관리자가 0명이 되는 일 방지). 회원 삭제는 하지 않는다(주문·리뷰 FK). 비밀번호 초기화는 `provider = 'LOCAL'`만, 임시 비밀번호는 세션에 잠깐 두고 한 번만 보여 준다.
+- 소셜 로그인: 처음 로그인한 (provider, provider_id)면 가입 후 `/oauth/welcome`(이름·연락처·주소)으로 보낸다. 같은 이메일의 다른 계정과 **자동으로 합치지 않는다**(계정 탈취 방지). 액세스 토큰은 저장하지 않는다. 콜백 주소는 `oauth.redirectBase`가 있으면 그것으로 만든다(콘솔 등록값과 정확히 같아야 함). 카카오 id는 큰 정수라 `MiniJson.idStr`로 읽는다.
 - 기존 DB에 컬럼 추가는 `sql/migrate-*.sql`로 따로 둔다 (schema 재실행은 데이터 초기화).
 
 ## 다음 할 일 (사용자와 합의 완료, 아직 구현 전)

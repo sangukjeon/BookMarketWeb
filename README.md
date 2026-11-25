@@ -69,7 +69,7 @@
 
 **회원**
 - 자체 회원가입·로그인 — **비밀번호 SHA-256 + salt 10,000회 암호화**
-- 카카오·네이버·Google 로그인 버튼 (OAuth 흐름을 그대로 따른 목업)
+- **카카오·네이버·Google 실제 로그인 (OAuth 2.0)** — 처음이면 가입 + 배송 정보 입력, 다음부터는 바로 로그인. 키를 안 넣은 제공자는 테스트용 목업으로 동작
 - 마이페이지(기본 배송지), 주문 내역, 찜 목록
 
 **관리자** (`admin` / `admin1234`)
@@ -103,7 +103,7 @@
 
 | 원본 (Swing) | 웹 | 보완 내용 |
 |---|---|---|
-| GuestWindow (이름·연락처 입력) | `/login` `/signup` `/oauth/*` | 회원가입, **비밀번호 암호화**, 소셜 로그인(목업) |
+| GuestWindow (이름·연락처 입력) | `/login` `/signup` `/oauth/*` | 회원가입, **비밀번호 암호화**, 카카오·네이버·구글 로그인 |
 | AdminLoginDialog (`Admin1234` 하드코딩) | DB 관리자 계정 | 코드에서 비밀번호 제거 |
 | MainWindow 버튼 9개 | 상단 메뉴바 · 사이드바 / 폰 하단 시트 | 장바구니 개수 배지, 다크 모드 |
 | CartAddItemPage | `/books` `/books/detail` | **카카오 책 검색 API**, 베스트셀러·신간, 찜, 리뷰, 최근 본 책 |
@@ -127,6 +127,7 @@
 2. **설정 파일 만들기** — `src/main/java/`에서 두 파일을 복사해 이름을 바꿔요. 비밀번호·키가 들어가서 **GitHub에는 올라가지 않는 파일**이에요.
    - `db.properties.example` → `db.properties` (Supabase 또는 내 PC MySQL 중 하나)
    - `api.properties.example` → `api.properties` (카카오 REST API 키, 비워 두면 DB에 저장된 도서만 검색)
+   - `oauth.properties.example` → `oauth.properties` (소셜 로그인 키, 비워 두면 목업 로그인 — 아래 "소셜 로그인 실제 연동")
 3. **DB 만들기**
    - Supabase: SQL Editor에서 [`sql/schema-postgres.sql`](sql/schema-postgres.sql) 실행
    - MySQL: Workbench에서 [`sql/schema.sql`](sql/schema.sql) 실행
@@ -229,7 +230,7 @@ src/main/java/com/market/
   dao/          BookDAO, MemberDAO, OrderDAO(트랜잭션·취소·매출), CouponDAO, WishlistDAO, ReviewDAO
   dto/          Item ← Book, Person ← Member, Order, OrderItem, Coupon, Review
   cart/         CartInterface ← Cart, CartItem (세션 저장)
-  oauth/        SocialProvider, MockSocialProvider, SocialProviders
+  oauth/        SocialProvider ← OAuth2Provider(Kakao·Naver·Google) / MockSocialProvider, SocialProviders
   filter/       EncodingFilter, SecurityFilter(CSRF · 접근 제어)
   util/         DBUtil(연결 풀), PasswordUtil, MemberSessions(정지·권한 변경 즉시 반영), MiniJson, Web
 src/main/webapp/
@@ -237,24 +238,53 @@ src/main/webapp/
   js/           theme(다크 모드) · ui(토스트 · 시트 · 확인 모달)
   WEB-INF/views JSP 화면 (common/ 공통 조각, admin/ 관리자)
 sql/            schema.sql (MySQL), schema-postgres.sql (Supabase), migrate-*.sql (기존 DB에 컬럼만 추가)
-tests/          HTTP 종단 테스트 — 기본 63개 + 회원 관리 33개 + 배송·별점 24개 + 카카오 검색 13개
+tests/          HTTP 종단 테스트 — 기본 64개 + 회원 관리 33개 + 배송·별점 24개 + 소셜 로그인 19개 + 카카오 검색 13개
 docs/           DESIGN.md, architecture.png, erd.png, screens/
 ```
 
 ## 테스트
 
-DB 초기화 → 톰캣 실행 → `python tests/e2e.py` (63개) → `python tests/e2e_members.py` (회원 관리 33개) → `python tests/e2e_shipping.py` (배송·별점 24개). 카카오 검색은 가짜 서버로 `tests/e2e_kakao.py` (13개). 자세한 방법은 [`tests/README.md`](tests/README.md).
+DB 초기화 → 톰캣 실행 → `python tests/e2e.py` (64개) → `python tests/e2e_members.py` (회원 관리 33개) → `python tests/e2e_shipping.py` (배송·별점 24개). 카카오 검색은 가짜 서버로 `tests/e2e_kakao.py` (13개), 소셜 로그인은 가짜 OAuth 서버로 `tests/e2e_oauth.py` (19개). 자세한 방법은 [`tests/README.md`](tests/README.md).
 
 <details>
-<summary><b>소셜 로그인을 실제로 바꾸려면</b></summary>
+<summary><b>소셜 로그인 실제 연동 (카카오·네이버·구글)</b></summary>
 
-지금은 `MockSocialProvider`가 구글·네이버·카카오 서버 역할을 해요. 흐름(state → code → 사용자 정보)이 실제 OAuth 2.0과 같아서 아래만 하면 돼요.
+`oauth.properties`에 클라이언트 ID를 넣은 제공자는 **실제 OAuth 2.0**으로, 비워 둔 제공자는 목업으로 동작해요.
+코드 구조는 `SocialProvider` 인터페이스 → `OAuth2Provider`(토큰·사용자 정보 받기 공통) → `Kakao/Naver/GoogleOAuthProvider`(주소와 JSON 모양만 다름)예요.
 
-1. 각 개발자 콘솔에서 키 발급, 리디렉션 URI `http://localhost:8080/BookMarketWeb/oauth/{google|naver|kakao}/callback`
-2. `SocialProvider`를 구현한 클래스 작성 — `authorizeUrl()`, `fetchProfile()` (JDK `HttpClient`)
-3. `SocialProviders`의 Mock을 새 클래스로 교체
+**모든 콘솔에 등록할 Redirect URI** (글자 하나라도 다르면 로그인이 안 돼요)
+```
+http://localhost:8080/BookMarketWeb/oauth/kakao/callback
+http://localhost:8080/BookMarketWeb/oauth/naver/callback
+http://localhost:8080/BookMarketWeb/oauth/google/callback
+```
 
-컨트롤러와 DB는 고칠 필요가 없어요.
+**카카오** — https://developers.kakao.com → 내 애플리케이션 (책 검색에 쓰는 앱 그대로 써도 돼요)
+1. 제품 설정 → **카카오 로그인** → 활성화 설정 **ON**
+2. 같은 화면의 **Redirect URI**에 위 카카오 주소 등록
+3. 카카오 로그인 → **동의항목**: 닉네임 "필수 동의", (선택) 카카오계정 이메일
+4. `kakao.clientId` = 앱 키의 **REST API 키**. (보안 → Client Secret을 "사용함"으로 켰다면 `kakao.clientSecret`도)
+
+**네이버** — https://developers.naver.com → Application → 애플리케이션 등록
+1. 사용 API: **네이버 로그인**, 제공 정보: 이름(또는 별명), 이메일
+2. 환경: **PC 웹**, 서비스 URL `http://localhost:8080`, Callback URL에 위 네이버 주소
+3. `naver.clientId`, `naver.clientSecret` = 발급된 Client ID / Client Secret
+4. "개발 중" 상태에서는 **멤버관리 → 테스트 ID**에 등록한 네이버 아이디로만 로그인돼요 (팀원 아이디 추가)
+
+**구글** — https://console.cloud.google.com
+1. 새 프로젝트 → **API 및 서비스 → OAuth 동의 화면**: 외부(External), 앱 이름·이메일 입력, 범위 `openid` `email` `profile`, **테스트 사용자**에 로그인할 구글 계정 추가
+2. **사용자 인증 정보 → OAuth 클라이언트 ID 만들기** → 웹 애플리케이션 → 승인된 리디렉션 URI에 위 구글 주소
+3. `google.clientId`, `google.clientSecret` = 발급된 클라이언트 ID / 보안 비밀번호
+
+넣은 뒤 Project Clean → Restart. 로그인 화면의 "목업" 안내가 사라지면 세 곳 모두 실제 연동된 거예요.
+
+| 오류 | 원인 |
+|---|---|
+| 카카오 `KOE006` / 네이버 "redirect uri가 다릅니다" / 구글 `redirect_uri_mismatch` | 콘솔의 Redirect URI가 위 주소와 다름 (`127.0.0.1`과 `localhost`도 다른 주소로 봐요) |
+| 카카오 `KOE004` / `KOE101` | 카카오 로그인이 꺼져 있거나 REST API 키가 아님 |
+| 네이버 로그인 화면에서 막힘 | "개발 중" 앱인데 테스트 ID에 등록 안 된 아이디 |
+| 구글 `access_denied` (403) | 동의 화면의 테스트 사용자에 그 계정이 없음 |
+| "정보를 받아 오지 못했어요" | 시크릿 오타. Eclipse Console의 `[OAuth KAKAO] 토큰 응답 …` 줄에 이유가 나와요 |
 
 </details>
 
