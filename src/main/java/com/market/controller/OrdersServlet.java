@@ -58,8 +58,14 @@ public class OrdersServlet extends HttpServlet {
 		Member m = Web.member(req);
 		long id = Web.toInt(req.getParameter("id"), -1);
 		try {
-			if (orderDAO.cancel(id, m.isAdmin() ? 0 : m.getMemberNo()))
+			if (orderDAO.cancel(id, m.isAdmin() ? 0 : m.getMemberNo())) {
 				Web.flash(req, "주문을 취소했어요. 쓴 쿠폰은 다시 쓸 수 있어요");
+				// 취소로 재고가 돌아온 품절 책: 재입고 알림
+				com.market.dto.Order o = orderDAO.findReceipt(id, 0);
+				if (o != null)
+					for (com.market.dto.OrderItem it : o.getItems())
+						new com.market.dao.RestockDAO().notifyIfAvailable(it.getBookId());
+			}
 			else {
 				com.market.dto.Order o = orderDAO.findReceipt(id, m.isAdmin() ? 0 : m.getMemberNo());
 				if (o != null && ("SHIPPING".equals(o.getStatus()) || "DELIVERED".equals(o.getStatus())))

@@ -41,6 +41,12 @@ public class CouponServlet extends HttpServlet {
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		String code = Web.trim(req.getParameter("code")).toUpperCase();
+		if (CouponDAO.REWARD_ONLY.contains(code)) {
+			req.setAttribute("code", code);
+			req.setAttribute("error", "이 쿠폰은 독서 성향 테스트나 7일 출석으로 받을 수 있어요.");
+			render(req, resp);
+			return;
+		}
 		CouponDAO.RegisterResult r;
 		try {
 			r = couponDAO.register(Web.member(req).getMemberNo(), code);

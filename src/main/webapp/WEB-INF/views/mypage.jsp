@@ -44,6 +44,28 @@
   </div>
 </form>
 
+<section class="card my-bear" aria-labelledby="mybear-title" style="margin-top:12px">
+  <c:choose>
+    <c:when test="${not empty myBear}">
+      <img src="${ctx}/images/mascot/${myBear.image}" alt="" width="72" height="72">
+      <div class="my-bear__body">
+        <p class="t-help">내 독서 성향</p>
+        <h2 class="t-title2" id="mybear-title"><a href="${ctx}/taste/result?type=${myBear.slug}">${myBear.label}</a></h2>
+        <p class="t-help"><c:forEach var="g" items="${myBear.genres}" varStatus="gs">${g.label}${gs.last ? '' : ' · '}</c:forEach> 책이 잘 맞아요</p>
+      </div>
+    </c:when>
+    <c:otherwise>
+      <img src="${ctx}/images/mascot/bear-search.png" alt="" width="72" height="69">
+      <div class="my-bear__body">
+        <h2 class="t-title2" id="mybear-title">나는 어떤 책 곰일까?</h2>
+        <p class="t-help">질문 5개로 알아보고 500원 쿠폰도 받아요</p>
+      </div>
+      <a class="btn btn-tint btn-s" href="${ctx}/taste">테스트하기</a>
+    </c:otherwise>
+  </c:choose>
+  <a class="my-bear__attend" href="${ctx}/attendance"><ui:icon name="calendar-check" cls="icon-sm" />출석 <span class="num">${streak}</span>일째</a>
+</section>
+
 <section class="card" id="addresses" aria-labelledby="addr-title" style="margin-top:12px">
   <div class="row-between card-title">
     <h2 class="t-title2" id="addr-title">배송지 <span class="muted num">${fn:length(addresses)}/${maxAddresses}</span></h2>

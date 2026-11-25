@@ -66,7 +66,7 @@ r = u.post(B + "/order", data={"_csrf": tu, "action": "place", "receiverName": "
 check("재고가 모자라요" in r.text and "/orders/receipt" not in r.url, "주문 시 재고 모자라면 거절(트랜잭션)")
 check(stock_of("ISBN1236") == "1권 남았어요", "거절된 주문은 재고 그대로")
 set_stock(a, "ISBN1236", 0)
-r = requests.get(B + "/books/detail", params={"id": "ISBN1236"}); check("품절이에요" in r.text and 'value="buy"' not in r.text, "품절: 구매 버튼 막힘")
+r = requests.get(B + "/books/detail", params={"id": "ISBN1236"}); check("재입고 알림 받기" in r.text and 'value="buy"' not in r.text, "품절: 구매 버튼 대신 재입고 알림")
 r = u.post(B + "/cart/add", data={"_csrf": tu, "id": "ISBN1236", "next": "/cart"}); check("품절된 책이에요" in r.text, "품절 책 담기 막음")
 r = u.get(B + "/cart"); check("품절됐어요" in r.text, "장바구니: 품절 표시")
 u.post(B + "/cart/remove", data={"_csrf": tu, "id": "ISBN1236"})

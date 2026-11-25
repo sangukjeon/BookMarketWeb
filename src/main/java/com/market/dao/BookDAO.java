@@ -130,6 +130,70 @@ public class BookDAO {
 		return list;
 	}
 
+	/**
+	 * 이 책을 산 사람들이 함께 산 책: 같은 주문(취소 제외)에 들어 있던 다른 책을 주문 수가 많은 순으로.
+	 * order_item을 자기 자신과 조인(셀프 조인)한다.
+	 */
+	public List<Book> boughtTogether(String bookId, int limit) throws SQLException {
+		List<Book> list = new ArrayList<>();
+		try (Connection con = DBUtil.getConnection(); PreparedStatement ps = con.prepareStatement(
+				"SELECT b.book_id, COUNT(DISTINCT o.order_id) AS together "
+						+ "FROM order_item mine "
+						+ "JOIN order_item other ON other.order_id = mine.order_id AND other.book_id <> mine.book_id "
+						+ "JOIN orders o ON o.order_id = mine.order_id "
+						+ "JOIN book b ON b.book_id = other.book_id "
+						+ "WHERE mine.book_id = ? AND o.status <> 'CANCELLED' "
+						+ "GROUP BY b.book_id ORDER BY together DESC, b.book_id LIMIT ?")) {
+			ps.setString(1, bookId);
+			ps.setInt(2, limit);
+			List<String> ids = new ArrayList<>();
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next())
+					ids.add(rs.getString("book_id"));
+			}
+			for (String id : ids) {
+				Book b = findById(id);
+				if (b != null)
+					list.add(b);
+			}
+		}
+		return list;
+	}
+
+	/**
+	 * 기간 판매 순위 (취소 제외). genre가 있으면 그 장르만. 책마다 팔린 권수(weekSold)를 채운다.
+	 */
+	public List<Book> bestBetween(java.time.LocalDateTime from, java.time.LocalDateTime to, String genre, int limit)
+			throws SQLException {
+		List<Book> list = new ArrayList<>();
+		String sql = "SELECT b.book_id, SUM(i.quantity) AS qty FROM order_item i "
+				+ "JOIN orders o ON o.order_id = i.order_id JOIN book b ON b.book_id = i.book_id "
+				+ "WHERE o.status <> 'CANCELLED' AND o.ordered_at >= ? AND o.ordered_at < ?"
+				+ (genre == null ? "" : " AND b.category = ?")
+				+ " GROUP BY b.book_id ORDER BY qty DESC, b.book_id LIMIT ?";
+		java.util.LinkedHashMap<String, Integer> sold = new java.util.LinkedHashMap<>();
+		try (Connection con = DBUtil.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+			int i = 1;
+			ps.setTimestamp(i++, java.sql.Timestamp.valueOf(from));
+			ps.setTimestamp(i++, java.sql.Timestamp.valueOf(to));
+			if (genre != null)
+				ps.setString(i++, genre);
+			ps.setInt(i, limit);
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next())
+					sold.put(rs.getString("book_id"), rs.getInt("qty"));
+			}
+		}
+		for (var e : sold.entrySet()) {
+			Book b = findById(e.getKey());
+			if (b != null) {
+				b.setWeekSold(e.getValue());
+				list.add(b);
+			}
+		}
+		return list;
+	}
+
 	/** 관리자 목록: 전체 */
 	public List<Book> findAll() throws SQLException {
 		try (Connection con = DBUtil.getConnection();

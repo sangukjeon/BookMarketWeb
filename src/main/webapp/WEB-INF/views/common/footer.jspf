@@ -41,6 +41,9 @@
     <a href="${ctx}/orders" ${nav == 'orders' ? 'aria-current="page"' : ''}><ui:icon name="receipt" />주문 내역</a>
     <a href="${ctx}/wishlist" ${nav == 'wishlist' ? 'aria-current="page"' : ''}><ui:icon name="heart" />찜한 책</a>
     <a href="${ctx}/coupons" ${nav == 'coupons' ? 'aria-current="page"' : ''}><ui:icon name="ticket-percent" />쿠폰함</a>
+    <a href="${ctx}/notifications" ${nav == 'notifications' ? 'aria-current="page"' : ''}><ui:icon name="bell" />알림</a>
+    <a href="${ctx}/attendance" ${nav == 'attendance' ? 'aria-current="page"' : ''}><ui:icon name="calendar-check" />출석 체크</a>
+    <a href="${ctx}/taste" ${nav == 'taste' ? 'aria-current="page"' : ''}><ui:icon name="paw-print" />독서 성향 테스트</a>
     <a href="${ctx}/mypage" ${nav == 'mypage' ? 'aria-current="page"' : ''}><ui:icon name="user-round" />내 정보</a>
     <c:if test="${me.admin}"><a href="${ctx}/admin" ${nav == 'admin' ? 'aria-current="page"' : ''}><ui:icon name="settings" />관리자</a></c:if>
     <c:choose>

@@ -44,6 +44,8 @@ public class MyPageServlet extends HttpServlet {
 	private void render(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		try {
 			req.setAttribute("addresses", addressDAO.findByMember(Web.member(req).getMemberNo()));
+			req.setAttribute("myBear", new com.market.dao.TasteDAO().find(Web.member(req).getMemberNo()));
+			req.setAttribute("streak", new com.market.dao.AttendanceDAO().streak(Web.member(req).getMemberNo(), com.market.util.Clock.today()));
 		} catch (SQLException e) {
 			throw new ServletException(e);
 		}

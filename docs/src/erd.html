@@ -1,12 +1,12 @@
 <!DOCTYPE html><html><head><meta charset="utf-8"><link rel="stylesheet" href="common.css">
 <style>
-.wrap{position:relative;height:1640px}
+.wrap{position:relative;height:2280px}
 .box{position:absolute;width:400px}
 svg.lines{position:absolute;inset:0;pointer-events:none}
 .lbl{font:600 13px "Pretendard Variable";fill:#1E56D6}
 .legend{position:absolute;right:48px;top:44px;display:flex;gap:14px;font-size:13px;align-items:center}
 </style></head><body><div class="wrap">
-<h1>윤상문고 ERD</h1><p class="sub">Supabase(PostgreSQL) · MySQL 8 · 테이블 10개 (원본 book.txt와 static 변수 → 관계형 DB, 카카오 API 도서 캐시)</p>
+<h1>윤상문고 ERD</h1><p class="sub">Supabase(PostgreSQL) · MySQL 8 · 테이블 16개 (원본 book.txt와 static 변수 → 관계형 DB, 카카오 API 도서 캐시)</p>
 <div class="legend"><span><span class="k pk">PK</span> 기본키</span><span><span class="k fk">FK</span> 외래키</span><span><span class="k uk">UK</span> 고유</span></div>
 
 <div class="box" style="left:48px;top:140px"><h3>member <small>회원</small></h3><table>
@@ -105,6 +105,42 @@ svg.lines{position:absolute;inset:0;pointer-events:none}
 <tr><td>quantity</td><td class="t">INT</td></tr>
 <tr><td>updated_at</td><td class="t">DATETIME</td></tr></table></div>
 
+<p class="sub" style="position:absolute;left:48px;top:1660px;margin:0;font-weight:700;color:#1E56D6">v4에서 더한 표 — 검색 도우미 · 재입고 알림 · 알림함 · 윤상문고 추천 · 독서 성향 테스트 · 출석 체크</p>
+<div class="box" style="left:48px;top:1700px"><h3>search_log <small>최근·인기 검색어</small></h3><table>
+<tr><td><span class="k pk">PK</span> log_id</td><td class="t">BIGINT AI</td></tr>
+<tr><td><span class="k fk">FK</span> member_no</td><td class="t">→ member, NULL 가능</td></tr>
+<tr><td>keyword</td><td class="t">VARCHAR(100)</td></tr>
+<tr><td>result_count</td><td class="t">INT</td></tr>
+<tr><td>searched_at</td><td class="t">DATETIME</td></tr>
+</table></div>
+<div class="box" style="left:600px;top:1700px"><h3>restock_request <small>재입고 알림 신청 (N:M)</small></h3><table>
+<tr><td><span class="k pk">PK</span> <span class="k fk">FK</span> member_no</td><td class="t">→ member</td></tr>
+<tr><td><span class="k pk">PK</span> <span class="k fk">FK</span> book_id</td><td class="t">→ book</td></tr>
+<tr><td>requested_at</td><td class="t">DATETIME</td></tr>
+</table></div>
+<div class="box" style="left:1152px;top:1700px"><h3>notification <small>알림함</small></h3><table>
+<tr><td><span class="k pk">PK</span> notification_id</td><td class="t">BIGINT AI</td></tr>
+<tr><td><span class="k fk">FK</span> member_no</td><td class="t">→ member</td></tr>
+<tr><td>message</td><td class="t">VARCHAR(200)</td></tr>
+<tr><td>link</td><td class="t">VARCHAR(200)</td></tr>
+<tr><td>created_at</td><td class="t">DATETIME</td></tr>
+<tr><td>read_at</td><td class="t">NULL이면 안 읽음</td></tr>
+</table></div>
+<div class="box" style="left:48px;top:2010px"><h3>book_pick <small>윤상문고 추천</small></h3><table>
+<tr><td><span class="k pk">PK</span> pick_id</td><td class="t">BIGINT AI</td></tr>
+<tr><td><span class="k fk">FK</span> book_id</td><td class="t">→ book</td></tr>
+<tr><td>comment</td><td class="t">VARCHAR(200)</td></tr>
+<tr><td>picked_at</td><td class="t">DATETIME</td></tr>
+</table></div>
+<div class="box" style="left:600px;top:2010px"><h3>taste_result <small>독서 성향 (1:1)</small></h3><table>
+<tr><td><span class="k pk">PK</span> <span class="k fk">FK</span> member_no</td><td class="t">→ member</td></tr>
+<tr><td>bear_type</td><td class="t">곰 유형 5가지</td></tr>
+<tr><td>taken_at</td><td class="t">DATETIME</td></tr>
+</table></div>
+<div class="box" style="left:1152px;top:2010px"><h3>attendance <small>출석 체크</small></h3><table>
+<tr><td><span class="k pk">PK</span> <span class="k fk">FK</span> member_no</td><td class="t">→ member</td></tr>
+<tr><td><span class="k pk">PK</span> check_date</td><td class="t">DATE (하루 1번)</td></tr>
+</table></div>
 <svg class="lines" width="1600" height="1240">
 <defs><marker id="m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="#2B6BF3"/></marker></defs>
 <g stroke="#2B6BF3" stroke-width="2" fill="none" marker-end="url(#m)">

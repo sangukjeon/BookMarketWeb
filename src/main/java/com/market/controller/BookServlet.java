@@ -63,12 +63,46 @@ public class BookServlet extends HttpServlet {
 			com.market.dto.Genre genre = q.isEmpty() ? com.market.dto.Genre.bySlug(req.getParameter("genre")) : null;
 			req.setAttribute("genre", genre);
 			req.setAttribute("genres", com.market.dto.Genre.values());
-			req.setAttribute("result", genre != null ? catalog.browseGenre(genre, tab, page) : catalog.browse(tab, q, sort, page));
+			com.market.api.BookPage result = genre != null ? catalog.browseGenre(genre, tab, page) : catalog.browse(tab, q, sort, page);
+			req.setAttribute("result", result);
 			req.setAttribute("genreCounts", bookDAO.countByGenre());
+			java.util.List<String> pop = new com.market.dao.SearchDAO().popular();
+			if (!pop.isEmpty())
+				req.setAttribute("popularKeywords", pop);
+			if (!q.isEmpty() && page == 1)
+				SearchServlet.remember(req, q, result.getTotal());
+			if (q.isEmpty() && genre == null && page == 1 && tab.equals("bestseller"))
+				home(req);
 			Web.render(req, resp, "books");
 		} catch (SQLException e) {
 			throw new ServletException(e);
 		}
+	}
+
+	/** 첫 화면: 윤상문고 추천 + 이번 주 베스트 10(지난주 대비 순위 변화) */
+	private void home(HttpServletRequest req) throws SQLException {
+		req.setAttribute("home", true);
+		req.setAttribute("pick", new com.market.dao.PickDAO().latest());
+		com.market.dto.Genre wk = com.market.dto.Genre.bySlug(req.getParameter("wk"));
+		req.setAttribute("wkGenre", wk);
+		req.setAttribute("weekly", weeklyBest(wk == null ? null : wk.getLabel()));
+	}
+
+	/** 최근 7일 판매 순위 10권. 그 전 7일의 순위와 비교해 rankDelta(+상승/-하락/null 새로 들어옴) */
+	List<Book> weeklyBest(String genre) throws SQLException {
+		java.time.LocalDateTime now = com.market.util.Clock.now().plusSeconds(1);
+		List<Book> thisWeek = bookDAO.bestBetween(now.minusDays(7), now, genre, 10);
+		List<Book> lastWeek = bookDAO.bestBetween(now.minusDays(14), now.minusDays(7), genre, 100);
+		java.util.Map<String, Integer> lastRank = new java.util.HashMap<>();
+		for (int i = 0; i < lastWeek.size(); i++)
+			lastRank.put(lastWeek.get(i).getBookId(), i + 1);
+		for (int i = 0; i < thisWeek.size(); i++) {
+			Book b = thisWeek.get(i);
+			b.setRank(i + 1);
+			Integer before = lastRank.get(b.getBookId());
+			b.setRankDelta(before == null ? null : before - (i + 1));
+		}
+		return thisWeek;
 	}
 
 	private void detail(HttpServletRequest req, HttpServletResponse resp)
@@ -85,10 +119,13 @@ public class BookServlet extends HttpServlet {
 		req.setAttribute("reviews", reviews);
 		req.setAttribute("avgRating", Math.round(avg * 10) / 10.0);
 		req.setAttribute("sameGenre", bookDAO.sameGenre(book.getCategory(), book.getBookId(), 4));
+		req.setAttribute("together", bookDAO.boughtTogether(book.getBookId(), 4));
 
 		Member m = Web.member(req);
 		if (m != null) {
 			req.setAttribute("wished", wishlistDAO.contains(m.getMemberNo(), book.getBookId()));
+			if (book.isSoldOut())
+				req.setAttribute("restockRequested", new com.market.dao.RestockDAO().has(m.getMemberNo(), book.getBookId()));
 			boolean reviewed = reviews.stream().anyMatch(r -> r.getMemberNo() == m.getMemberNo());
 			req.setAttribute("reviewed", reviewed);
 			req.setAttribute("canReview", !reviewed && orderDAO.hasPurchased(m.getMemberNo(), book.getBookId()));

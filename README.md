@@ -34,6 +34,16 @@
 
 ### PC
 
+| 첫 화면 · 윤상문고 추천 · 이번 주 베스트 | 검색 도우미 (최근 · 인기 검색어) |
+|---|---|
+| <img src="docs/screens/pc-home.png" alt="첫 화면"> | <img src="docs/screens/pc-suggest.png" alt="검색 도우미"> |
+| **곰 독서 성향 테스트** | **출석 체크** |
+| <img src="docs/screens/pc-taste.png" alt="독서 성향 테스트"> | <img src="docs/screens/pc-attendance.png" alt="출석 체크"> |
+| **알림함 (재입고 · 배송)** | **함께 산 책 (셀프 조인)** |
+| <img src="docs/screens/pc-notifications.png" alt="알림함"> | <img src="docs/screens/pc-together.png" alt="함께 산 책"> |
+| **관리자 · 추천 도서** | |
+| <img src="docs/screens/pc-admin-picks.png" alt="관리자 추천 도서"> | |
+
 | 도서 목록 · 장르 (마스코트) | 도서 검색 |
 |---|---|
 | <img src="docs/screens/pc-genre.png" alt="장르별 도서"> | <img src="docs/screens/pc-search.png" alt="검색"> |
@@ -54,6 +64,10 @@
 
 ### 모바일
 
+| 검색 도우미 | 재입고 알림 | 곰 테스트 결과 | 출석 체크 |
+|---|---|---|---|
+| <img src="docs/screens/m-suggest.png" width="140"> | <img src="docs/screens/m-restock.png" width="140"> | <img src="docs/screens/m-taste-result.png" width="140"> | <img src="docs/screens/m-attendance.png" width="140"> |
+
 | 장르 | 상세 · 재고 | 주문서 · 저장한 배송지 | 쿠폰함 | 영수증 | 메뉴 | 다크 모드 |
 |---|---|---|---|---|---|---|
 | <img src="docs/screens/m-genre.png" width="140"> | <img src="docs/screens/m-detail.png" width="140"> | <img src="docs/screens/m-order.png" width="140"> | <img src="docs/screens/m-coupons.png" width="140"> | <img src="docs/screens/m-receipt.png" width="140"> | <img src="docs/screens/m-menu.png" width="140"> | <img src="docs/screens/m-dark-books.png" width="140"> |
@@ -61,6 +75,15 @@
 ---
 
 ## 주요 기능
+
+**v4 — 큰 서점에서 가져와 윤상문고식으로 만든 기능**
+- **검색 도우미**: 검색창을 누르면 내 최근 검색어 5개(하나씩·전체 지우기)와 **인기 검색어 10개**(최근 24시간, 결과가 있었던 검색만). 회원은 DB, 비회원은 세션에 저장
+- **이 책을 산 분들이 함께 산 책**: `order_item`을 셀프 조인해서 같은 주문에 담긴 책을 세요(취소 제외)
+- **이번 주 베스트 10**: 최근 7일 판매 순위를 지난 7일과 비교해 ▲·▼·NEW 표시, 장르 탭
+- **윤상문고 추천**: 관리자가 고른 책과 한마디를 첫 화면에서 곰이 소개
+- **재입고 알림 · 알림함**: 품절 책에 알림 신청 → 관리자가 재고를 채우거나 주문 취소로 재고가 돌아오면 알림(한 트랜잭션). 배송 시작·완료도 알림. 상단 종 아이콘에 안 읽은 수
+- **곰 독서 성향 테스트**: 질문 5개 → 곰 유형 5가지(모험가·생각하는·성장하는·감성·만드는 곰)와 어울리는 장르, 추천 책 3권. 처음 끝내면 500원 쿠폰(TASTE500)
+- **출석 체크**: 하루 한 번, 달력 표시, **7일 연속이면 1,000원 쿠폰(ATTEND7)**. 이벤트 쿠폰은 번호로 등록할 수 없어요
 
 **도서**
 - 카카오 책 검색(정확도순·최신순), 베스트셀러(윤상문고 판매량순)·신간 탭, 페이지 나누기
@@ -87,7 +110,7 @@
 **관리자** (`admin` / `admin1234`)
 - 매출 요약: 오늘·전체 매출, 주문 수, 취소율, **최근 7일 매출 그래프**, 많이 팔린 책 TOP 5
 - 주문 관리: 상태별 칩(건수), **한 단계씩 배송 진행**(배송 준비하기 → 배송 시작하기 → 배송 완료하기), 배송 전 주문만 취소
-- 도서 등록·수정·삭제 (**장르 선택, 재고 입력**), 쿠폰 관리 (**쿠폰별 등록 수 / 사용 수**)
+- 도서 등록·수정·삭제 (**장르 선택, 재고 입력** — 품절 책에 재고를 넣으면 재입고 알림 자동 발송), 쿠폰 관리 (**쿠폰별 등록 수 / 사용 수**), **추천 도서**(첫 화면 소개)
 - **회원 관리**: 이름·아이디·이메일 검색, 가입 방식·권한·상태 필터, 회원별 주문 수·구매액, 회원 상세(정보 + 주문 내역)
   - **계정 정지 / 해제** — 정지하면 로그인할 수 없고, 이미 로그인해 있던 회원도 다음 요청에서 바로 로그아웃
   - **권한 변경** (일반 ↔ 관리자) — 다시 로그인하지 않아도 바로 반영. 내 계정은 바꿀 수 없음
@@ -105,7 +128,7 @@
 <img src="docs/architecture.png" alt="애플리케이션 구조도">
 
 <details>
-<summary><b>ERD (테이블 10개)</b></summary>
+<summary><b>ERD (테이블 16개)</b></summary>
 
 <img src="docs/erd.png" alt="ERD">
 
@@ -143,7 +166,7 @@
 3. **DB 만들기**
    - Supabase: SQL Editor에서 [`sql/schema-postgres.sql`](sql/schema-postgres.sql) 실행
    - MySQL: Workbench에서 [`sql/schema.sql`](sql/schema.sql) 실행
-   - 이미 쓰던 DB라면 데이터를 지우지 않도록 추가용 SQL만 실행: [`migrate-member-status.sql`](sql/migrate-member-status.sql)(회원 관리) → [`migrate-shipping.sql`](sql/migrate-shipping.sql)(배송 단계) → `migrate-v3-postgres.sql` / `migrate-v3-mysql.sql`(장르·재고·배송지·쿠폰함·장바구니 저장)
+   - 이미 쓰던 DB라면 데이터를 지우지 않도록 추가용 SQL만 실행: [`migrate-member-status.sql`](sql/migrate-member-status.sql)(회원 관리) → [`migrate-shipping.sql`](sql/migrate-shipping.sql)(배송 단계) → `migrate-v3-postgres.sql` / `migrate-v3-mysql.sql`(장르·재고·배송지·쿠폰함·장바구니 저장) → `migrate-v4-postgres.sql` / `migrate-v4-mysql.sql`(검색 기록·알림·추천·테스트·출석)
 4. **실행** — `Servers` 탭 → Tomcat v10.1에 `BookMarketWeb` 추가 → Start → http://localhost:8080/BookMarketWeb
 
 | 테스트 계정 · 쿠폰 | |
@@ -152,13 +175,15 @@
 | 일반 회원 | 회원가입 화면에서 직접 만들기 (영문+숫자 8자 이상) |
 | `WELCOME10` | 10% 할인 (최대 5,000원) — 가입하면 쿠폰함에 자동으로 들어 있어요 |
 | `BOOK3000` | 3만 원 이상이면 3,000원 할인 — 쿠폰함에서 번호를 등록해야 써요 |
+| `TASTE500` | 500원 할인 — 곰 독서 성향 테스트를 처음 끝내면 받아요 (번호 등록 불가) |
+| `ATTEND7` | 1,000원 할인 — 7일 연속 출석하면 받아요 (번호 등록 불가) |
 
 <details>
 <summary><b>Supabase(클라우드 DB) 설정 자세히</b> — 어느 PC에서든 같은 DB</summary>
 
 1. https://supabase.com → **New project** → 지역 Northeast Asia, **Database Password**를 정하고 메모
 2. **SQL Editor** → New query → `sql/schema-postgres.sql` 전체 붙여넣기 → **Run**
-   → Table Editor에 테이블 10개(member, book, coupon, orders, order_item, wishlist, review, member_address, member_coupon, cart_item)가 보이면 성공
+   → Table Editor에 테이블 16개(member, book, coupon, orders, order_item, wishlist, review, member_address, member_coupon, cart_item, search_log, restock_request, notification, book_pick, taste_result, attendance)가 보이면 성공
 3. 위쪽 **Connect** → **Session pooler** 선택 → 연결 문자열에서 사용자·호스트 확인
    ```
    postgresql://postgres.abcdefgh:[YOUR-PASSWORD]@aws-1-ap-northeast-2.pooler.supabase.com:5432/postgres
@@ -217,6 +242,7 @@ mysql -u root -p --default-character-set=utf8mb4 < sql\schema.sql
 | `Unknown column 'status'` 등 | 최신 `schema.sql` / `schema-postgres.sql` 다시 실행 (데이터가 지워져요) |
 | 회원 관리 화면에서 `column "status" does not exist` / `Unknown column 'status'` | 기존 데이터를 지키려면 [`sql/migrate-member-status.sql`](sql/migrate-member-status.sql) 한 줄만 실행 |
 | 주문 화면에서 `column "shipped_at" does not exist` / `Unknown column 'shipped_at'` | [`sql/migrate-shipping.sql`](sql/migrate-shipping.sql) 두 줄 실행 |
+| `relation "search_log" does not exist` / `Table 'bookmarket.notification' doesn't exist` | Supabase는 [`sql/migrate-v4-postgres.sql`](sql/migrate-v4-postgres.sql), MySQL은 [`sql/migrate-v4-mysql.sql`](sql/migrate-v4-mysql.sql) 실행 (쿠폰 TASTE500·ATTEND7도 추가) |
 | `column "stock" does not exist` / `relation "member_coupon" does not exist` / `Table 'bookmarket.cart_item' doesn't exist` | Supabase는 [`sql/migrate-v3-postgres.sql`](sql/migrate-v3-postgres.sql), MySQL은 [`sql/migrate-v3-mysql.sql`](sql/migrate-v3-mysql.sql) 실행 (기존 회원에게 WELCOME10도 넣어 줘요) |
 | 별점 별이 안 보이거나 모양이 깨짐 | 예전 CSS가 캐시된 것 → 브라우저에서 Ctrl+F5 (강력 새로 고침) |
 | `relation "book" does not exist` | Supabase SQL Editor에서 `schema-postgres.sql`을 실행했는지 확인 |
@@ -238,10 +264,10 @@ mysql -u root -p --default-character-set=utf8mb4 < sql\schema.sql
 
 ```
 src/main/java/com/market/
-  controller/   Book · Cart · Auth · SocialLogin · Order · Orders · Wishlist · MyPage · Coupon · Admin Servlet
+  controller/   Book · Search · Cart · Auth · SocialLogin · Order · Orders · Wishlist · MyPage · Coupon · Notification · Taste · Attendance · Admin Servlet
   api/          BookCatalog(카카오 ↔ DB 선택), KakaoBookClient, BookPage
-  dao/          BookDAO, MemberDAO(탈퇴), OrderDAO(트랜잭션·재고·취소·매출), CouponDAO(쿠폰함), AddressDAO, CartDAO, WishlistDAO, ReviewDAO
-  dto/          Item ← Book, Person ← Member, Order, OrderItem, Coupon, Review, Address, Genre(장르 enum)
+  dao/          BookDAO, MemberDAO(탈퇴), OrderDAO(트랜잭션·재고·취소·매출), CouponDAO(쿠폰함·이벤트 쿠폰), AddressDAO, CartDAO, WishlistDAO, ReviewDAO, SearchDAO, RestockDAO, NotificationDAO, PickDAO, TasteDAO, AttendanceDAO
+  dto/          Item ← Book, Person ← Member, Order, OrderItem, Coupon, Review, Address, Genre(장르 enum), BearType·TasteQuiz(곰 테스트), Notification, BookPick
   cart/         CartInterface ← Cart, CartItem (세션 저장)
   oauth/        SocialProvider ← OAuth2Provider(Kakao·Naver·Google) / MockSocialProvider, SocialProviders
   filter/       EncodingFilter, SecurityFilter(CSRF · 접근 제어)
@@ -252,13 +278,13 @@ src/main/webapp/
   images/mascot 마스코트 곰 — 책 읽기(로고·목록), 인사(로그인), 만세(주문 완료), 돋보기(빈 화면), 시무룩(오류)
   WEB-INF/views JSP 화면 (common/ 공통 조각, admin/ 관리자)
 sql/            schema.sql (MySQL), schema-postgres.sql (Supabase), migrate-*.sql (기존 DB에 칸·표만 추가)
-tests/          HTTP 종단 테스트 207개 — 기본 68 + 회원 관리 33 + 배송·별점 24 + v3 기능 47 + 소셜 로그인 19 + 카카오 검색·장르 16
+tests/          HTTP 종단 테스트 250개 — 기본 68 + 회원 관리 33 + 배송·별점 24 + v3 기능 47 + v4 기능 43 + 소셜 로그인 19 + 카카오 검색·장르 16
 docs/           DESIGN.md, architecture.png, erd.png, screens/
 ```
 
 ## 테스트
 
-DB 초기화 → 톰캣 실행 → `python tests/e2e.py` (68개) → `python tests/e2e_members.py` (회원 관리 33개) → `python tests/e2e_shipping.py` (배송·별점 24개) → `python tests/e2e_v3.py` (장르·재고·배송지·비밀번호·탈퇴·쿠폰함·장바구니 저장·표지 고화질 47개). 카카오 검색·장르 가져오기는 가짜 서버로 `tests/e2e_kakao.py` (16개), 소셜 로그인은 가짜 OAuth 서버로 `tests/e2e_oauth.py` (19개). 자세한 방법은 [`tests/README.md`](tests/README.md).
+DB 초기화 → 톰캣 실행 → `python tests/e2e.py` (68개) → `python tests/e2e_members.py` (회원 관리 33개) → `python tests/e2e_shipping.py` (배송·별점 24개) → `python tests/e2e_v3.py` (장르·재고·배송지·비밀번호·탈퇴·쿠폰함·장바구니 저장·표지 고화질 47개) → `python tests/e2e_v4.py` (검색 도우미·함께 산 책·재입고 알림·주간 베스트·추천·테스트·출석 43개). 카카오 검색·장르 가져오기는 가짜 서버로 `tests/e2e_kakao.py` (16개), 소셜 로그인은 가짜 OAuth 서버로 `tests/e2e_oauth.py` (19개). 자세한 방법은 [`tests/README.md`](tests/README.md).
 
 <details>
 <summary><b>소셜 로그인 실제 연동 (카카오·네이버·구글)</b></summary>

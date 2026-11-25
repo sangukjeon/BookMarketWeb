@@ -104,6 +104,26 @@ public class CouponDAO {
 	}
 
 	/** 가입 선물처럼 조용히 넣어 줄 때 (쿠폰이 없거나 멈췄으면 아무것도 안 함) */
+	/** 이벤트로만 주는 쿠폰 — 쿠폰함에서 번호로 등록할 수 없다 */
+	public static final java.util.Set<String> REWARD_ONLY = java.util.Set.of("TASTE500", "ATTEND7");
+
+	/** 이벤트 보상: 쿠폰함에 없을 때만 넣는다. 넣었으면 true */
+	public boolean grantReward(long memberNo, String code) throws SQLException {
+		if (inWallet(memberNo, code))
+			return false;
+		try (Connection con = DBUtil.getConnection(); PreparedStatement ps = con.prepareStatement(
+				"INSERT INTO member_coupon (member_no, code, registered_at) VALUES (?,?,?)")) {
+			ps.setLong(1, memberNo);
+			ps.setString(2, code);
+			ps.setTimestamp(3, com.market.util.Clock.nowTs());
+			return ps.executeUpdate() == 1;
+		} catch (SQLException e) {
+			if (DBErrors.isConstraintViolation(e))
+				return false;
+			throw e;
+		}
+	}
+
 	public void grant(long memberNo, String code) throws SQLException {
 		register(memberNo, code);
 	}

@@ -266,11 +266,15 @@ public class MemberDAO {
 		try (Connection con = DBUtil.getConnection()) {
 			con.setAutoCommit(false);
 			try {
-				for (String t : new String[] { "wishlist", "cart_item", "member_coupon", "member_address" })
+				for (String t : new String[] { "wishlist", "cart_item", "member_coupon", "member_address", "restock_request", "notification", "taste_result", "attendance" })
 					try (PreparedStatement ps = con.prepareStatement("DELETE FROM " + t + " WHERE member_no = ?")) {
 						ps.setLong(1, memberNo);
 						ps.executeUpdate();
 					}
+				try (PreparedStatement ps = con.prepareStatement("UPDATE search_log SET member_no = NULL WHERE member_no = ?")) {
+					ps.setLong(1, memberNo);
+					ps.executeUpdate();
+				}
 				try (PreparedStatement ps = con.prepareStatement(
 						"UPDATE member SET login_id = ?, password_hash = NULL, salt = NULL, name = ?, phone = NULL, address = NULL, "
 								+ "email = NULL, provider_id = NULL, role = 'USER', status = 'WITHDRAWN' WHERE member_no = ?")) {

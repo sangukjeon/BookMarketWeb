@@ -14,6 +14,12 @@ FLUSH PRIVILEGES;
 
 USE bookmarket;
 
+DROP TABLE IF EXISTS attendance;
+DROP TABLE IF EXISTS taste_result;
+DROP TABLE IF EXISTS book_pick;
+DROP TABLE IF EXISTS notification;
+DROP TABLE IF EXISTS restock_request;
+DROP TABLE IF EXISTS search_log;
 DROP TABLE IF EXISTS cart_item;
 DROP TABLE IF EXISTS member_coupon;
 DROP TABLE IF EXISTS member_address;
@@ -172,6 +178,71 @@ CREATE TABLE cart_item (
   CONSTRAINT fk_cart_book   FOREIGN KEY (book_id)   REFERENCES book (book_id)     ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+-- ===== v4 =====
+-- 검색 기록 (최근 검색어·인기 검색어). 최근 검색어를 지우면 member_no만 비워서 인기 순위에는 남긴다
+CREATE TABLE search_log (
+  log_id       BIGINT       NOT NULL AUTO_INCREMENT,
+  member_no    BIGINT       NULL,
+  keyword      VARCHAR(100) NOT NULL,
+  result_count INT          NOT NULL DEFAULT 0,
+  searched_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (log_id),
+  KEY idx_search_time (searched_at),
+  KEY idx_search_member (member_no, searched_at),
+  CONSTRAINT fk_search_member FOREIGN KEY (member_no) REFERENCES member (member_no) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- 재입고 알림 신청 (회원 N : M 도서). 알림을 보내면 지운다
+CREATE TABLE restock_request (
+  member_no    BIGINT      NOT NULL,
+  book_id      VARCHAR(20) NOT NULL,
+  requested_at DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (member_no, book_id),
+  CONSTRAINT fk_restock_member FOREIGN KEY (member_no) REFERENCES member (member_no) ON DELETE CASCADE,
+  CONSTRAINT fk_restock_book   FOREIGN KEY (book_id)   REFERENCES book (book_id)     ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- 알림 (재입고·배송·쿠폰). read_at이 NULL이면 안 읽음
+CREATE TABLE notification (
+  notification_id BIGINT       NOT NULL AUTO_INCREMENT,
+  member_no       BIGINT       NOT NULL,
+  message         VARCHAR(200) NOT NULL,
+  link            VARCHAR(200) NULL,
+  created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  read_at         DATETIME     NULL,
+  PRIMARY KEY (notification_id),
+  KEY idx_noti_member (member_no, read_at),
+  CONSTRAINT fk_noti_member FOREIGN KEY (member_no) REFERENCES member (member_no) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- 윤상문고 추천 (관리자가 고른 책 + 한마디, 가장 최근 것이 메인에)
+CREATE TABLE book_pick (
+  pick_id    BIGINT       NOT NULL AUTO_INCREMENT,
+  book_id    VARCHAR(20)  NOT NULL,
+  comment    VARCHAR(200) NOT NULL,
+  picked_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (pick_id),
+  CONSTRAINT fk_pick_book FOREIGN KEY (book_id) REFERENCES book (book_id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- 곰 독서 성향 테스트 결과 (회원당 1개, 다시 하면 덮어씀)
+CREATE TABLE taste_result (
+  member_no BIGINT      NOT NULL,
+  bear_type VARCHAR(20) NOT NULL,
+  taken_at  DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (member_no),
+  CONSTRAINT fk_taste_member FOREIGN KEY (member_no) REFERENCES member (member_no) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- 출석 체크 (하루 1번)
+CREATE TABLE attendance (
+  member_no  BIGINT NOT NULL,
+  check_date DATE   NOT NULL,
+  PRIMARY KEY (member_no, check_date),
+  CONSTRAINT fk_attend_member FOREIGN KEY (member_no) REFERENCES member (member_no) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+
 -- ---------------------------------------------------------
 -- 처음 데이터
 -- ---------------------------------------------------------
@@ -189,4 +260,6 @@ VALUES ('admin', 'G4DmGwfEKjxayTYVq/2kdhyHoTrdwsXnqlMJVWTlmg4=', 'Qm9va01hcmtldE
 -- 쿠폰 (회원마다 한 번씩 쓸 수 있고, 주문을 취소하면 다시 쓸 수 있다)
 INSERT INTO coupon VALUES
 ('WELCOME10', '첫 주문 10% 할인', 'RATE', 10, 0, 5000, 1),
-('BOOK3000', '3만 원 이상 3,000원 할인', 'AMOUNT', 3000, 30000, NULL, 1);
+('BOOK3000', '3만 원 이상 3,000원 할인', 'AMOUNT', 3000, 30000, NULL, 1),
+('TASTE500', '독서 성향 테스트 보상 500원', 'AMOUNT', 500, 0, NULL, 1),
+('ATTEND7', '7일 출석 보상 1,000원', 'AMOUNT', 1000, 0, NULL, 1);

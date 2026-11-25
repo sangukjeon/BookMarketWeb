@@ -118,6 +118,37 @@
       </c:choose>
     </section>
 
+    <c:if test="${book.soldOut}">
+      <form id="restock-request" method="post" action="${ctx}/restock" hidden>
+        <%@ include file="/WEB-INF/views/common/csrf.jspf" %>
+        <input type="hidden" name="id" value="<c:out value='${book.bookId}'/>">
+        <input type="hidden" name="next" value="/books/detail?id=<c:out value='${book.bookId}'/>">
+      </form>
+      <form id="restock-cancel" method="post" action="${ctx}/restock" hidden>
+        <%@ include file="/WEB-INF/views/common/csrf.jspf" %>
+        <input type="hidden" name="id" value="<c:out value='${book.bookId}'/>">
+        <input type="hidden" name="action" value="cancel">
+      </form>
+    </c:if>
+
+    <c:if test="${not empty together}">
+      <section class="same-genre" aria-labelledby="together-title">
+        <div class="row-between" style="margin-bottom:12px">
+          <h2 class="t-title2" id="together-title">이 책을 산 분들이 함께 산 책</h2>
+          <span class="t-help">같은 주문에 많이 담긴 순</span>
+        </div>
+        <ul class="same-genre__list">
+          <c:forEach var="sb" items="${together}">
+            <li><a href="${ctx}/books/detail?id=${fn:escapeXml(sb.bookId)}">
+              <span class="cover"><c:set var="coverBook" value="${sb}" /><%@ include file="/WEB-INF/views/common/cover.jspf" %></span>
+              <span class="same-genre__name"><c:out value="${sb.name}" /></span>
+              <span class="t-help num"><fmt:formatNumber value="${sb.unitPrice}" pattern="#,##0" />원</span>
+            </a></li>
+          </c:forEach>
+        </ul>
+      </section>
+    </c:if>
+
     <c:if test="${not empty sameGenre}">
       <section class="same-genre" aria-labelledby="same-title">
         <div class="row-between" style="margin-bottom:12px">
@@ -143,7 +174,7 @@
       <dl class="buybox__rows">
         <div><dt>배송비</dt><dd>${book.unitPrice >= 30000 ? '무료' : '3,000원 (3만 원 이상 무료)'}</dd></div>
         <div><dt>쿠폰</dt><dd>쿠폰함 쿠폰을 주문서에서</dd></div>
-        <div><dt>재고</dt><dd>${book.soldOut ? '품절' : (book.lowStock ? book.stock.toString().concat('권 남았어요') : '있어요')}</dd></div>
+        <div><dt>재고</dt><dd>${book.soldOut ? '품절 · 재입고 알림 신청 가능' : (book.lowStock ? book.stock.toString().concat('권 남았어요') : '있어요')}</dd></div>
         <div><dt>리뷰</dt><dd><c:choose><c:when test="${empty reviews}">아직 없어요</c:when><c:otherwise><span class="num" style="display:inline-flex;align-items:center;gap:2px"><ui:icon name="star" cls="icon-sm star-on" />${avgRating}</span> · ${fn:length(reviews)}개</c:otherwise></c:choose></dd></div>
       </dl>
       <form class="plate" method="post" action="${ctx}/cart/add">
@@ -152,7 +183,8 @@
       <input type="hidden" name="next" value="${selfPath}">
       <div class="plate__inner">
         <c:choose>
-          <c:when test="${book.soldOut}"><button class="btn btn-main btn-soldout" type="button" disabled>품절이에요</button></c:when>
+          <c:when test="${book.soldOut and restockRequested}"><button class="btn btn-sub btn-restock" type="submit" form="restock-cancel"><ui:icon name="bell-ring" />알림 신청함 · 취소하기</button></c:when>
+          <c:when test="${book.soldOut}"><button class="btn btn-main" type="submit" form="restock-request"><ui:icon name="bell" />재입고 알림 받기</button></c:when>
           <c:otherwise>
         <button class="btn btn-sub" type="submit" name="then" value="stay" aria-label="장바구니에 담기"><ui:icon name="shopping-cart" />담기</button>
         <button class="btn btn-main" type="submit" name="then" value="buy">바로 구매하기</button>
@@ -168,7 +200,8 @@
       <input type="hidden" name="next" value="${selfPath}">
       <div class="plate__inner">
         <c:choose>
-          <c:when test="${book.soldOut}"><button class="btn btn-main btn-soldout" type="button" disabled>품절이에요</button></c:when>
+          <c:when test="${book.soldOut and restockRequested}"><button class="btn btn-sub btn-restock" type="submit" form="restock-cancel"><ui:icon name="bell-ring" />알림 신청함 · 취소하기</button></c:when>
+          <c:when test="${book.soldOut}"><button class="btn btn-main" type="submit" form="restock-request"><ui:icon name="bell" />재입고 알림 받기</button></c:when>
           <c:otherwise>
         <button class="btn btn-sub" type="submit" name="then" value="stay" aria-label="장바구니에 담기"><ui:icon name="shopping-cart" />담기</button>
         <button class="btn btn-main" type="submit" name="then" value="buy">바로 구매하기</button>

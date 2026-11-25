@@ -25,13 +25,16 @@ import jakarta.servlet.http.HttpServletResponse;
  */
 @WebServlet({ "/admin", "/admin/orders", "/admin/books", "/admin/books/edit", "/admin/books/delete", "/admin/coupons",
 		"/admin/members", "/admin/members/detail", "/admin/members/status", "/admin/members/role",
-		"/admin/members/password", "/admin/orders/status" })
+		"/admin/members/password", "/admin/orders/status", "/admin/picks", "/admin/picks/delete" })
 public class AdminServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private final BookDAO bookDAO = new BookDAO();
 	private final CouponDAO couponDAO = new CouponDAO();
 	private final com.market.dao.OrderDAO orderDAO = new com.market.dao.OrderDAO();
 	private final MemberDAO memberDAO = new MemberDAO();
+	private final com.market.dao.PickDAO pickDAO = new com.market.dao.PickDAO();
+	private final com.market.dao.RestockDAO restockDAO = new com.market.dao.RestockDAO();
+	private final com.market.dao.NotificationDAO notificationDAO = new com.market.dao.NotificationDAO();
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -77,6 +80,11 @@ public class AdminServlet extends HttpServlet {
 					req.setAttribute("book", new Book());
 				}
 				Web.render(req, resp, "admin/book-form");
+				break;
+			case "/admin/picks":
+				req.setAttribute("picks", pickDAO.find(20));
+				req.setAttribute("pickBookId", Web.trim(req.getParameter("bookId")));
+				Web.render(req, resp, "admin/picks");
 				break;
 			case "/admin/coupons":
 				req.setAttribute("coupons", couponDAO.findAllWithStats());
@@ -197,8 +205,10 @@ public class AdminServlet extends HttpServlet {
 				long oid = Web.toInt(req.getParameter("id"), -1);
 				String from = req.getParameter("from");
 				String to = com.market.dto.Order.nextOf(from);
-				if (to != null && orderDAO.advance(oid, from))
+				if (to != null && orderDAO.advance(oid, from)) {
 					Web.flash(req, "주문을 " + com.market.dto.Order.labelOf(to) + ("DELIVERED".equals(to) ? "로" : "으로") + " 바꿨어요");
+					notifyOrder(oid, to);
+				}
 				else
 					Web.flash(req, "이미 상태가 바뀌었거나 바꿀 수 없는 주문이에요");
 				String back = req.getParameter("next");
@@ -208,6 +218,13 @@ public class AdminServlet extends HttpServlet {
 			case "/admin/members/role":
 			case "/admin/members/password":
 				manageMember(req, resp);
+				break;
+			case "/admin/picks":
+				savePick(req, resp);
+				break;
+			case "/admin/picks/delete":
+				Web.flash(req, pickDAO.delete(Web.toInt(req.getParameter("id"), -1)) ? "추천을 내렸어요" : "이미 내린 추천이에요");
+				Web.redirect(req, resp, "/admin/picks");
 				break;
 			default:
 				resp.sendError(405);
@@ -253,12 +270,46 @@ public class AdminServlet extends HttpServlet {
 		b.setImage(image.isEmpty() ? null : image);
 		if (editing) {
 			bookDAO.update(b);
-			Web.flash(req, "도서 정보를 고쳤어요");
+			int sent = restockDAO.notifyIfAvailable(b.getBookId());
+			Web.flash(req, sent > 0 ? "도서 정보를 고치고 재입고 알림 " + sent + "건을 보냈어요" : "도서 정보를 고쳤어요");
 		} else {
 			bookDAO.insert(b);
 			Web.flash(req, "새 도서를 등록했어요");
 		}
 		Web.redirect(req, resp, "/admin/books");
+	}
+
+	/** 배송 시작·배송 완료를 주문한 회원에게 알림 */
+	private void notifyOrder(long orderId, String to) throws SQLException {
+		if (!"SHIPPING".equals(to) && !"DELIVERED".equals(to))
+			return;
+		com.market.dto.Order o = orderDAO.findReceipt(orderId, 0);
+		if (o == null)
+			return;
+		notificationDAO.add(o.getMemberNo(), "주문 " + o.getOrderNo() + ("SHIPPING".equals(to) ? " 배송이 시작됐어요" : " 배송이 끝났어요. 리뷰를 남겨 주세요"),
+				"/orders/receipt?id=" + orderId);
+	}
+
+	/** 윤상문고 추천 등록: 도서 ID + 한마디(5~100자) */
+	private void savePick(HttpServletRequest req, HttpServletResponse resp) throws SQLException, ServletException, IOException {
+		String bookId = Web.trim(req.getParameter("bookId")).toUpperCase();
+		String comment = Web.trim(req.getParameter("comment"));
+		String error = null;
+		if (bookDAO.findById(bookId) == null)
+			error = "도서 ID에 맞는 책이 없어요. 도서 목록에서 ID를 확인해 주세요.";
+		else if (comment.length() < 5 || comment.length() > 100)
+			error = "추천 한마디는 5~100자로 써 주세요.";
+		if (error != null) {
+			req.setAttribute("error", error);
+			req.setAttribute("pickBookId", bookId);
+			req.setAttribute("pickComment", comment);
+			req.setAttribute("picks", pickDAO.find(20));
+			Web.render(req, resp, "admin/picks");
+			return;
+		}
+		pickDAO.add(bookId, comment);
+		Web.flash(req, "첫 화면에 추천을 올렸어요");
+		Web.redirect(req, resp, "/admin/picks");
 	}
 
 	private void saveCoupon(HttpServletRequest req, HttpServletResponse resp)

@@ -24,6 +24,14 @@ public final class Web {
 			throws ServletException, IOException {
 		if (view.equals("login") || view.equals("signup"))
 			req.setAttribute("socialMock", com.market.oauth.SocialProviders.anyMock());
+		Member me = member(req);
+		if (me != null && req.getAttribute("unreadCount") == null) {
+			try {
+				req.setAttribute("unreadCount", new com.market.dao.NotificationDAO().unreadCount(me.getMemberNo()));
+			} catch (java.sql.SQLException e) {
+				req.setAttribute("unreadCount", 0);
+			}
+		}
 		if (req.getAttribute("genres") == null)
 			req.setAttribute("genres", com.market.dto.Genre.values());
 		req.getRequestDispatcher("/WEB-INF/views/" + view + ".jsp").forward(req, resp);

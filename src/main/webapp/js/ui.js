@@ -116,3 +116,69 @@ document.addEventListener('click', function (e) {
   var cur = document.querySelector('.genre-chips [aria-current="true"]');
   if (cur && cur.parentNode.scrollTo) cur.parentNode.scrollTo({ left: cur.offsetLeft - 16 });
 })();
+
+/* 검색창 도우미: 누르면 최근 검색어(지우기)와 인기 검색어를 보여 준다 */
+(function () {
+  var forms = document.querySelectorAll('form[data-suggest]');
+  forms.forEach(function (form) {
+    var input = form.querySelector('input[name="q"]');
+    if (!input) return;
+    var panel = document.createElement('div');
+    panel.className = 'suggest';
+    panel.hidden = true;
+    panel.id = (input.id || 'q') + '-suggest';
+    form.appendChild(panel);
+    input.setAttribute('aria-controls', panel.id);
+    input.setAttribute('aria-expanded', 'false');
+    input.setAttribute('autocomplete', 'off');
+
+    function link(q) { return form.getAttribute('action') + '?q=' + encodeURIComponent(q); }
+    function esc(s) { var d = document.createElement('span'); d.textContent = s; return d.innerHTML; }
+    function close() { panel.hidden = true; input.setAttribute('aria-expanded', 'false'); }
+    function render(data) {
+      var h = '';
+      h += '<div class="suggest__group"><div class="suggest__head"><b>최근 검색어</b>' +
+        (data.recent.length ? '<button type="button" class="text-btn" data-clear>전체 지우기</button>' : '') + '</div>';
+      if (!data.recent.length) h += '<p class="suggest__empty">최근에 찾은 낱말이 없어요</p>';
+      else h += '<ul>' + data.recent.map(function (k) {
+        return '<li class="suggest__recent"><a href="' + link(k) + '">' + esc(k) + '</a>' +
+          '<button type="button" class="suggest__x" data-del="' + esc(k) + '" aria-label="' + esc(k) + ' 지우기">×</button></li>';
+      }).join('') + '</ul>';
+      h += '</div><div class="suggest__group"><div class="suggest__head"><b>인기 검색어</b><span class="t-help">최근 24시간</span></div>';
+      if (!data.popular.length) h += '<p class="suggest__empty">아직 모인 검색어가 없어요</p>';
+      else h += '<ol class="suggest__popular">' + data.popular.map(function (k, i) {
+        return '<li><a href="' + link(k) + '"><span class="suggest__rank num' + (i < 3 ? ' is-top' : '') + '">' + (i + 1) + '</span>' + esc(k) + '</a></li>';
+      }).join('') + '</ol>';
+      h += '</div>';
+      panel.innerHTML = h;
+    }
+    function load() {
+      fetch(form.getAttribute('data-suggest'), { credentials: 'same-origin' })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (data) {
+          if (!data) return;
+          render(data);
+          panel.hidden = false;
+          input.setAttribute('aria-expanded', 'true');
+        }).catch(function () {});
+    }
+    function remove(keyword) {
+      var body = new URLSearchParams();
+      body.set('_csrf', form.getAttribute('data-csrf') || '');
+      if (keyword) body.set('keyword', keyword);
+      fetch(form.getAttribute('data-suggest-delete'), {
+        method: 'POST', credentials: 'same-origin', body: body,
+        headers: { 'X-Requested-With': 'fetch' }
+      }).then(load);
+    }
+    input.addEventListener('focus', load);
+    input.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+    panel.addEventListener('mousedown', function (e) { e.preventDefault(); }); // 누르는 동안 입력창 포커스 유지
+    panel.addEventListener('click', function (e) {
+      var del = e.target.closest('[data-del]');
+      if (del) { remove(del.getAttribute('data-del')); return; }
+      if (e.target.closest('[data-clear]')) remove(null);
+    });
+    input.addEventListener('blur', function () { setTimeout(close, 150); });
+  });
+})();

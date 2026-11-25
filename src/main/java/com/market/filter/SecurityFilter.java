@@ -59,7 +59,8 @@ public class SecurityFilter implements Filter {
 			}
 		}
 		boolean needLogin = path.startsWith("/order") || path.startsWith("/mypage") || path.startsWith("/admin")
-				|| path.startsWith("/wishlist") || path.startsWith("/books/review") || path.startsWith("/coupons");
+				|| path.startsWith("/wishlist") || path.startsWith("/books/review") || path.startsWith("/coupons")
+				|| path.startsWith("/notifications") || path.startsWith("/restock") || path.startsWith("/attendance");
 		if (needLogin && m == null) {
 			String next = req.getRequestURI().substring(req.getContextPath().length());
 			if ("GET".equals(req.getMethod()) && req.getQueryString() != null)

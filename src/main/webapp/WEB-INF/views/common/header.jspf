@@ -33,7 +33,7 @@
       <a href="${ctx}/orders" ${nav == 'orders' ? 'aria-current="page"' : ''}>주문 내역</a>
       <c:if test="${me.admin}"><a href="${ctx}/admin" ${nav == 'admin' ? 'aria-current="page"' : ''}>관리자</a></c:if>
     </nav>
-    <form class="topbar__search search" role="search" method="get" action="${ctx}/books">
+    <form class="topbar__search search" role="search" method="get" action="${ctx}/books" data-suggest="${ctx}/search/suggest" data-suggest-delete="${ctx}/search/recent/delete" data-csrf="${sessionScope.csrf}">
       <ui:icon name="search" />
       <label class="sr-only" for="top-q">도서명, 저자, 출판사로 찾기</label>
       <input class="input" id="top-q" name="q" type="search" value="<c:out value='${q}'/>" placeholder="도서명, 저자, 출판사로 찾기" enterkeyhint="search">
@@ -43,6 +43,12 @@
         <svg class="icon" aria-hidden="true"><use href="${ctx}/images/icons.svg#i-moon"/></svg>
       </button>
       <a class="icon-btn pc-only" href="${ctx}/wishlist" aria-label="찜한 책" ${nav == 'wishlist' ? 'aria-current="page"' : ''}><ui:icon name="heart" /></a>
+      <c:if test="${not empty me}">
+        <a class="icon-btn" href="${ctx}/notifications" aria-label="알림${unreadCount > 0 ? ', 안 읽은 알림 '.concat(unreadCount).concat('개') : ''}" ${nav == 'notifications' ? 'aria-current="page"' : ''}>
+          <ui:icon name="bell" />
+          <c:if test="${unreadCount > 0}"><span class="badge" aria-hidden="true">${unreadCount > 99 ? '99+' : unreadCount}</span></c:if>
+        </a>
+      </c:if>
       <a class="icon-btn" href="${ctx}/cart" aria-label="장바구니, ${cartCount}권 담김" ${nav == 'cart' ? 'aria-current="page"' : ''}>
         <ui:icon name="shopping-cart" />
         <c:if test="${cartCount > 0}"><span class="badge" aria-hidden="true">${cartCount > 99 ? '99+' : cartCount}</span></c:if>

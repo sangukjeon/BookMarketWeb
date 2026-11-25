@@ -72,6 +72,23 @@ public class Book extends Item {
 		return m.matches() ? m.group(1) + HI_SIZE + m.group(2) : url;
 	}
 
+	// ---------- 주간 베스트 (화면 계산용, DB 칸 아님) ----------
+	private int weekSold;
+	private int rank;
+	/** 지난주보다 오른 칸 수 (+는 상승, -는 하락), null이면 새로 들어옴 */
+	private Integer rankDelta;
+
+	public int getWeekSold() { return weekSold; }
+	public void setWeekSold(int weekSold) { this.weekSold = weekSold; }
+	public int getRank() { return rank; }
+	public void setRank(int rank) { this.rank = rank; }
+	public Integer getRankDelta() { return rankDelta; }
+	public void setRankDelta(Integer rankDelta) { this.rankDelta = rankDelta; }
+	public boolean isRankNew() { return rankDelta == null; }
+	public boolean isRankUp() { return rankDelta != null && rankDelta > 0; }
+	public boolean isRankDown() { return rankDelta != null && rankDelta < 0; }
+	public int getRankDeltaAbs() { return rankDelta == null ? 0 : Math.abs(rankDelta); }
+
 	// ---------- 재고 ----------
 	public int getStock() { return stock; }
 	public void setStock(int stock) { this.stock = stock; }

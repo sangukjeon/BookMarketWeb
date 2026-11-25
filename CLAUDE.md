@@ -29,7 +29,7 @@ src/main/java/
     controller/  서블릿 (@WebServlet). 요청 → DAO → request 속성 → Web.render("뷰이름")
     api/         BookCatalog(검색은 카카오, 탭은 DB), KakaoBookClient, BookPage. AladinClient.java는 알라딘 서비스 종료(2026-11-01)로 쓰지 않음 — 지워도 됨
     dao/         JDBC. 모든 SQL은 PreparedStatement. OrderDAO.insert는 트랜잭션
-    dto/         Item, Book, Person, Member, Order, OrderItem, Coupon, Review, Address, Genre(장르 enum 10개)
+    dto/         Item, Book, Person, Member, Order, OrderItem, Coupon, Review, Address, Genre(장르 enum 10개), BearType·TasteQuiz(곰 테스트), Notification, BookPick
     cart/        세션 장바구니 (원본 유지)
     oauth/       SocialProvider ← OAuth2Provider(Kakao·Naver·GoogleOAuthProvider, 실제 연동) / MockSocialProvider(키 없을 때). SocialProviders가 oauth.properties를 보고 고른다
     filter/      EncodingFilter, SecurityFilter (web.xml에 순서대로 등록, @WebFilter 쓰지 않음)
@@ -46,14 +46,14 @@ src/main/webapp/
   images/icons.svg Lucide 아이콘 스프라이트
 sql/schema.sql     DB 전체 생성 (DROP 후 다시 만듦 → 실행하면 데이터 초기화)
 sql/schema-postgres.sql  Supabase(PostgreSQL)용. SQL Editor에서 실행. RLS를 켜서 REST API 접근을 막음
-sql/migrate-member-status.sql, migrate-shipping.sql, migrate-v3-{postgres,mysql}.sql  기존 DB에 칸·표만 추가 (데이터 유지)
+sql/migrate-member-status.sql, migrate-shipping.sql, migrate-v3-{postgres,mysql}.sql, migrate-v4-{postgres,mysql}.sql  기존 DB에 칸·표만 추가 (데이터 유지, 순서대로)
 tests/             HTTP 종단 테스트 (tests/README.md)
 docs/              DESIGN.md, erd.png, architecture.png, screens/, src/(다이어그램 HTML 원본)
 ```
 
 ## 실행
 - **이클립스(사용자 기본):** Servers 탭 → Tomcat v10.1 → Add and Remove로 BookMarketWeb 추가 → Start → http://localhost:8080/BookMarketWeb
-- **DB 초기화:** `mysql -u root -p --default-character-set=utf8mb4 < sql/schema.sql` (테이블 10개 + 앱 계정 `bookmarket/bookmarket1234` + 관리자 `admin/admin1234` + 쿠폰 2개)
+- **DB 초기화:** `mysql -u root -p --default-character-set=utf8mb4 < sql/schema.sql` (테이블 16개 + 앱 계정 `bookmarket/bookmarket1234` + 관리자 `admin/admin1234` + 쿠폰 2개)
 - **Supabase:** SQL Editor에서 `sql/schema-postgres.sql` 실행 → `db.properties`를 example의 A로. 접속 정보·비밀번호는 사용자가 직접 넣는다 (채팅으로 받지 않는다)
 - **이클립스 없이 컴파일 확인:**
   ```
@@ -61,7 +61,7 @@ docs/              DESIGN.md, erd.png, architecture.png, screens/, src/(다이�
   ```
   (macOS/Linux는 클래스패스 구분자가 `;` 대신 `:`)
   배포는 `src/main/webapp` 전체 + `build/classes` + `db.properties`, `api.properties`를 `<톰캣>/webapps/BookMarketWeb/`(`WEB-INF/classes`)에 복사.
-- **테스트:** DB 초기화 → 톰캣 실행 → `python tests/e2e.py` (68개) → `python tests/e2e_members.py` (회원 관리 33개) → `python tests/e2e_shipping.py` (배송·별점 24개) → `python tests/e2e_v3.py` (v3 기능 47개). 소셜 로그인 실제 흐름은 `tests/fake_oauth.py` + `tests/e2e_oauth.py` (19개). 카카오 검색은 `tests/fake_kakao.py` + `tests/e2e_kakao.py` (검색·장르 16개, tests/README.md).
+- **테스트:** DB 초기화 → 톰캣 실행 → `python tests/e2e.py` (68개) → `python tests/e2e_members.py` (회원 관리 33개) → `python tests/e2e_shipping.py` (배송·별점 24개) → `python tests/e2e_v3.py` (v3 기능 47개) → `python tests/e2e_v4.py` (v4 기능 43개, 날짜를 되돌리는 부분은 `DB=mysql|pg|none`). 소셜 로그인 실제 흐름은 `tests/fake_oauth.py` + `tests/e2e_oauth.py` (19개). 카카오 검색은 `tests/fake_kakao.py` + `tests/e2e_kakao.py` (검색·장르 16개, tests/README.md).
 
 ## 꼭 지킬 것 (실제로 겪은 함정)
 - **JSTL URI**는 `http://java.sun.com/jsp/jstl/core` 형식. `jakarta.tags.core`는 이 jar에서 동작하지 않는다.
@@ -91,6 +91,12 @@ docs/              DESIGN.md, erd.png, architecture.png, screens/, src/(다이�
 - 배송지: `member_address` 회원당 최대 5개, 기본 배송지를 바꾸면 `member.address/phone`에도 복사한다.
 - 탈퇴: `status = WITHDRAWN`, 행은 지우지 않고(주문·리뷰 FK) 이름·연락처·주소·이메일·비밀번호·provider_id를 지우고 찜·장바구니·쿠폰함·배송지는 삭제. 배송이 끝나지 않은 주문(ORDERED/PREPARING/SHIPPING)이 있거나 관리자면 막는다.
 - 표지: 카카오 썸네일은 120x174라 흐리다. 화면에서는 `Book.getImageHi()`가 주소의 크기 부분을 `R480x0.q85`로 바꾼 큰 그림을 쓰고, `cover.jspf`의 `onerror`가 실패하면 `data-fallback`(원래 주소)으로 되돌린다. DB에는 원래 주소를 그대로 둔다.
+- 검색 기록(`search_log`): 2글자 이상만 남긴다. 최근 검색어 지우기는 행을 지우지 않고 `member_no`만 NULL로(인기 순위 유지). 인기 검색어는 `result_count > 0`, 최근 24시간(5개 미만이면 7일), `SearchDAO`가 1분 캐시(결과가 있는 검색이 들어오면 비움). 비회원 최근 검색어는 세션.
+- 알림(`notification`): 사이트 안에서만. 재입고는 `RestockDAO.notifyIfAvailable(bookId)` 하나로 — 관리자 도서 수정 후, 주문 취소 후 부른다(재고 > 0이면 신청자 모두에게 알림 + 신청 삭제를 한 트랜잭션). 배송 시작·완료는 `AdminServlet.notifyOrder`. 안 읽은 수는 `Web.render`가 `unreadCount`로 넣는다.
+- 주간 베스트: `BookDAO.bestBetween(from, to, genre)`로 최근 7일 vs 그 전 7일, `rankDelta`(+상승, null=NEW). 함께 산 책은 `boughtTogether`(order_item 셀프 조인, 취소 제외).
+- 이벤트 쿠폰 `TASTE500`(테스트 첫 완료)·`ATTEND7`(7일 연속 출석)은 `CouponDAO.grantReward`로만 넣고, 쿠폰함 번호 등록은 `REWARD_ONLY`로 막는다. 쿠폰함에 한 번 들어가면 다시 주지 않는다.
+- 출석: `attendance(member_no, check_date)` PK로 하루 1번. 연속일은 오늘(안 했으면 어제)부터 거꾸로 센다. 날짜는 `Clock.today()`(Asia/Seoul).
+- 탈퇴 시 v4 표: restock_request·notification·taste_result·attendance 삭제, search_log는 member_no만 NULL.
 - 리뷰: 그 책을 산(취소 안 된) 회원만, 책 1권에 1개 (`uk_review_once`).
 - `member.status`: `ACTIVE` / `SUSPENDED` / `WITHDRAWN`. 정지 회원은 자체·소셜 로그인 모두 막고(비밀번호가 맞을 때만 "정지" 안내), 로그인 중이면 `SecurityFilter`가 다음 요청에서 로그아웃시킨다. 관리자가 회원 상태·권한을 바꾸면 반드시 `MemberSessions.changed(memberNo)`를 부른다.
 - 회원 관리(`/admin/members`): 관리자는 **자기 계정의 상태·권한을 바꿀 수 없다**(관리자가 0명이 되는 일 방지). 회원 삭제는 하지 않는다(주문·리뷰 FK). 비밀번호 초기화는 `provider = 'LOCAL'`만, 임시 비밀번호는 세션에 잠깐 두고 한 번만 보여 준다.

@@ -56,7 +56,7 @@
       <p>위쪽 검색창에서 도서명·저자·출판사로 모든 책을 찾을 수 있어요. 왼쪽에서 장르별로도 볼 수 있어요.</p>
     </div>
     <div class="chips" aria-label="인기 검색어">
-      <c:forEach var="kw" items="자바,파이썬,스프링,데이터베이스,알고리즘,웹 프로그래밍">
+      <c:forEach var="kw" items="${empty popularKeywords ? '자바,파이썬,스프링,데이터베이스,알고리즘,웹 프로그래밍' : popularKeywords}" end="5">
         <c:url var="kwUrl" value="/books"><c:param name="q" value="${kw}" /></c:url>
         <a class="chip" href="${kwUrl}"><ui:icon name="search" cls="icon-sm" />${kw}</a>
       </c:forEach>
@@ -67,7 +67,7 @@
   <h1 class="t-heading">어떤 책을 찾으세요?</h1>
 </div>
 
-<form class="search m-only" role="search" method="get" action="${ctx}/books">
+<form class="search m-only" role="search" method="get" action="${ctx}/books" data-suggest="${ctx}/search/suggest" data-suggest-delete="${ctx}/search/recent/delete" data-csrf="${sessionScope.csrf}">
   <ui:icon name="search" />
   <label class="sr-only" for="q">도서명, 저자, 출판사로 찾기</label>
   <input class="input" id="q" name="q" type="search" value="<c:out value='${q}'/>" placeholder="도서명, 저자, 출판사로 찾기" enterkeyhint="search">
@@ -96,6 +96,65 @@
   </section>
 </c:if>
 
+<c:if test="${home}">
+  <c:if test="${not empty pick and not empty pick.book}">
+    <section class="pick card" aria-labelledby="pick-title">
+      <img class="pick__bear" src="${ctx}/images/mascot/bear-wave.png" alt="" width="96" height="105">
+      <div class="pick__body">
+        <p class="eyebrow-s"><ui:icon name="award" cls="icon-sm" />윤상문고 추천 · <span class="num">${pick.pickedAtText}</span></p>
+        <h2 class="t-title1" id="pick-title"><a href="${ctx}/books/detail?id=${fn:escapeXml(pick.bookId)}"><c:out value="${pick.book.name}" /></a></h2>
+        <p class="pick__quote">“<c:out value="${pick.comment}" />”</p>
+        <p class="t-help"><c:out value="${pick.book.author}" /> · <fmt:formatNumber value="${pick.book.unitPrice}" pattern="#,##0" />원</p>
+      </div>
+      <a class="pick__cover cover" href="${ctx}/books/detail?id=${fn:escapeXml(pick.bookId)}" aria-hidden="true" tabindex="-1"><c:set var="coverBook" value="${pick.book}" /><%@ include file="/WEB-INF/views/common/cover.jspf" %></a>
+    </section>
+  </c:if>
+
+  <nav class="quick" aria-label="윤상문고 즐길 거리">
+    <a class="quick__item" href="${ctx}/taste"><span class="quick__icon quick__icon--purple"><ui:icon name="paw-print" /></span><b>독서 성향 테스트</b><span>나는 어떤 곰?</span></a>
+    <a class="quick__item" href="${ctx}/attendance"><span class="quick__icon quick__icon--green"><ui:icon name="calendar-check" /></span><b>출석 체크</b><span>7일이면 1,000원</span></a>
+    <a class="quick__item" href="${ctx}/coupons"><span class="quick__icon quick__icon--orange"><ui:icon name="ticket-percent" /></span><b>쿠폰함</b><span>쿠폰 등록·확인</span></a>
+    <a class="quick__item" href="${ctx}/notifications"><span class="quick__icon quick__icon--blue"><ui:icon name="bell" /></span><b>알림</b><span>재입고·배송 소식</span></a>
+  </nav>
+
+  <section class="weekly" aria-labelledby="weekly-title">
+    <div class="row-between weekly__head">
+      <h2 class="t-title1" id="weekly-title">이번 주 베스트 10</h2>
+      <span class="t-help">최근 7일 판매량 · 지난주와 비교</span>
+    </div>
+    <div class="weekly__tabs" role="navigation" aria-label="주간 베스트 장르">
+      <a class="chip" href="${ctx}/books#weekly-title" aria-current="${empty wkGenre}">전체</a>
+      <c:forEach var="g" items="${genres}">
+        <a class="chip" href="${ctx}/books?wk=${g.slug}#weekly-title" aria-current="${wkGenre == g}">${g.label}</a>
+      </c:forEach>
+    </div>
+    <c:choose>
+      <c:when test="${empty weekly}">
+        <p class="weekly__empty t-body3 muted">${empty wkGenre ? '이번 주에 팔린 책이 아직 없어요.' : '이번 주에 이 장르는 아직 팔린 책이 없어요.'}</p>
+      </c:when>
+      <c:otherwise>
+        <ol class="weekly__list">
+          <c:forEach var="b" items="${weekly}">
+            <li>
+              <a href="${ctx}/books/detail?id=${fn:escapeXml(b.bookId)}">
+                <span class="weekly__rank num">${b.rank}</span>
+                <span class="cover cover--sm"><c:set var="coverBook" value="${b}" /><%@ include file="/WEB-INF/views/common/cover.jspf" %></span>
+                <span class="weekly__info"><span class="weekly__name"><c:out value="${b.name}" /></span><span class="t-help"><c:out value="${b.author}" /> · <span class="num">${b.weekSold}</span>권</span></span>
+                <c:choose>
+                  <c:when test="${b.rankNew}"><span class="rank-move rank-move--new">NEW</span></c:when>
+                  <c:when test="${b.rankUp}"><span class="rank-move rank-move--up" aria-label="${b.rankDeltaAbs}계단 올라감"><ui:icon name="arrow-up" cls="icon-sm" />${b.rankDeltaAbs}</span></c:when>
+                  <c:when test="${b.rankDown}"><span class="rank-move rank-move--down" aria-label="${b.rankDeltaAbs}계단 내려감"><ui:icon name="arrow-down" cls="icon-sm" />${b.rankDeltaAbs}</span></c:when>
+                  <c:otherwise><span class="rank-move" aria-label="순위 그대로">–</span></c:otherwise>
+                </c:choose>
+              </a>
+            </li>
+          </c:forEach>
+        </ol>
+      </c:otherwise>
+    </c:choose>
+  </section>
+</c:if>
+<c:if test="${home}"><h2 class="t-title1 m-only home-genre-title">장르별로 보기</h2></c:if>
 <c:if test="${empty q}">
   <div class="genre-chips m-only" role="navigation" aria-label="장르">
     <a class="chip" href="${ctx}/books" aria-current="${empty genre}">전체</a>
