@@ -84,6 +84,8 @@ r = s4.post(B + "/oauth/mock", data={"_csrf": t4, "provider": "google", "state":
 check(r.url.endswith("/login") and "확인하지 못했어요" in r.text, "state 위조 차단")
 r = s4.get(B + "/oauth/naver/login"); t4 = csrf(r.text); state = re.search(r'name="state" value="([^"]+)"', r.text).group(1)
 r = s4.post(B + "/oauth/mock", data={"_csrf": t4, "provider": "naver", "state": state, "name": "네이버", "email": "n@example.com", "action": "allow"})
+check(r.url.endswith("/oauth/welcome") and "거의 다 됐어요" in r.text, "네이버 목업 첫 로그인 → 추가 정보 화면")
+r = s4.post(B + "/oauth/welcome", data={"_csrf": csrf(r.text), "name": "네이버", "phone": "010-5555-6666", "address": ""})
 check(r.url.endswith("/books"), "네이버 목업 로그인")
 r = s4.get(B + "/mypage"); check("네이버 계정" in r.text and "n@example.com" in r.text, "소셜 회원 자동 가입")
 s5 = requests.Session()

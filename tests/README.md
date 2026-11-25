@@ -6,7 +6,7 @@
 pip install requests
 ```
 
-## 1. 기본 기능 (63개)
+## 1. 기본 기능 (64개)
 **DB를 처음 상태로 만들고, `api.properties`의 카카오 키를 비운 상태(DB 모드)**에서 실행하세요.
 
 ```
@@ -28,7 +28,34 @@ python e2e_shipping.py
 ```
 관리자 배송 단계 진행(한 단계씩, 두 번 눌러도 한 번만), 배송 시작 뒤 취소 불가(회원·관리자), 영수증 진행 막대, 별점 입력·저장을 확인해요.
 
-## 4. 카카오 책 검색 (13개)
+## 4. 소셜 로그인 실제 연동 (19개)
+가짜 OAuth 서버가 카카오·네이버·구글의 주소와 응답 모양을 흉내 내요. 톰캣의 `WEB-INF/classes/oauth.properties`가 이 서버를 가리켜야 해요.
+```
+python fake_oauth.py          # 포트 8097
+```
+`oauth.properties` (테스트용)
+```
+oauth.redirectBase=http://localhost:8080/BookMarketWeb
+kakao.clientId=KAKAO_ID
+kakao.authBase=http://localhost:8097/kakao
+kakao.apiBase=http://localhost:8097/kakao
+naver.clientId=NAVER_ID
+naver.clientSecret=NAVER_SECRET
+naver.authBase=http://localhost:8097/naver
+naver.apiBase=http://localhost:8097/naver
+google.clientId=GOOGLE_ID
+google.clientSecret=GOOGLE_SECRET
+google.authUrl=http://localhost:8097/google/auth
+google.tokenUrl=http://localhost:8097/google/token
+google.userUrl=http://localhost:8097/google/userinfo
+```
+```
+python e2e_oauth.py
+```
+첫 로그인 → 가입 + 배송 정보 입력, 두 번째부터 바로 로그인, 큰 숫자 카카오 ID, 네이버 state·시크릿, 구글 scope, 취소·토큰 실패·state 위조, 정지 회원을 확인해요.
+(키 없이 띄우면 목업 모드이고, 이때는 `e2e.py`가 목업 흐름을 확인해요)
+
+## 5. 카카오 책 검색 (13개)
 실제 카카오 대신 `fake_kakao.py`가 같은 형식으로 응답해요.
 
 1. `python fake_kakao.py` (127.0.0.1:8098, 창을 열어 둔 채로)
