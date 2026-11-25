@@ -53,7 +53,7 @@ docs/              DESIGN.md, erd.png, architecture.png, screens/, src/(다이�
 
 ## 실행
 - **이클립스(사용자 기본):** Servers 탭 → Tomcat v10.1 → Add and Remove로 BookMarketWeb 추가 → Start → http://localhost:8080/BookMarketWeb
-- **DB 초기화:** `mysql -u root -p --default-character-set=utf8mb4 < sql/schema.sql` (테이블 16개 + 앱 계정 `bookmarket/bookmarket1234` + 관리자 `admin/admin1234` + 쿠폰 2개)
+- **DB 초기화:** `mysql -u root -p --default-character-set=utf8mb4 < sql/schema.sql` (테이블 16개 + 앱 계정 `bookmarket/bookmarket1234` + 관리자 `admin/admin1234` + 쿠폰 4개)
 - **Supabase:** SQL Editor에서 `sql/schema-postgres.sql` 실행 → `db.properties`를 example의 A로. 접속 정보·비밀번호는 사용자가 직접 넣는다 (채팅으로 받지 않는다)
 - **이클립스 없이 컴파일 확인:**
   ```
