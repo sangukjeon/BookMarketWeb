@@ -113,6 +113,14 @@ public final class MiniJson {
 		return v == null ? "" : v.toString();
 	}
 
+	/** ID처럼 큰 정수 숫자도 "3141592653" 그대로 문자열로 (Double.toString은 3.14E9가 된다) */
+	public static String idStr(Map<String, Object> m, String k) {
+		Object v = m == null ? null : m.get(k);
+		if (v instanceof Number n)
+			return new java.math.BigDecimal(n.toString()).toBigInteger().toString();
+		return v == null ? "" : v.toString();
+	}
+
 	public static int num(Map<String, Object> m, String k) {
 		Object v = m.get(k);
 		return v instanceof Number n ? n.intValue() : 0;

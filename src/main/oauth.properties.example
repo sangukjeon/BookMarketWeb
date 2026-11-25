@@ -1,0 +1,28 @@
+# =========================================================
+# 소셜 로그인 실제 연동 키 — 이 파일을 복사해 oauth.properties로 만들고 값을 넣으세요.
+# clientId가 비어 있는 제공자는 테스트용 목업 로그인으로 동작해요.
+# oauth.properties는 비밀 정보라 GitHub에 올리지 않아요(.gitignore).
+# 바꾼 뒤: 프로젝트 Refresh → Project > Clean → 톰캣 Restart
+#
+# 각 개발자 콘솔에 등록할 Redirect URI (그대로 복사)
+#   카카오  http://localhost:8080/BookMarketWeb/oauth/kakao/callback
+#   네이버  http://localhost:8080/BookMarketWeb/oauth/naver/callback
+#   구글    http://localhost:8080/BookMarketWeb/oauth/google/callback
+# =========================================================
+
+# 콜백 주소의 앞부분. 비워 두면 접속한 주소로 자동 계산해요.
+# (127.0.0.1로 접속해도 콘솔에 등록한 localhost 주소와 맞추려면 아래 값을 쓰세요)
+oauth.redirectBase=http://localhost:8080/BookMarketWeb
+
+# 카카오: 내 애플리케이션 > 앱 키 > REST API 키
+#        (보안 > Client Secret을 "사용함"으로 켰다면 그 값도 넣기, 아니면 비워 두기)
+kakao.clientId=
+kakao.clientSecret=
+
+# 네이버: 애플리케이션 > 내 애플리케이션 > Client ID / Client Secret
+naver.clientId=
+naver.clientSecret=
+
+# 구글: Google Cloud Console > API 및 서비스 > 사용자 인증 정보 > OAuth 클라이언트 ID(웹 애플리케이션)
+google.clientId=
+google.clientSecret=

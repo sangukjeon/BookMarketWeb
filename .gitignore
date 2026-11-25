@@ -7,11 +7,10 @@ target/
 # Eclipse 작업공간 / 개인 설정
 .metadata/
 .claude/settings.local.json
-
 # 비밀 정보 — 절대 올리지 않기 (*.example 을 복사해서 사용)
 src/main/java/db.properties
 src/main/java/api.properties
-
+src/main/java/oauth.properties
 # 기타
 __pycache__/
 *.log

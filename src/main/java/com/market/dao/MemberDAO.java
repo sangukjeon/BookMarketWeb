@@ -78,6 +78,11 @@ public class MemberDAO {
 	}
 
 	/** 소셜 로그인: (provider, providerId)로 찾고, 없으면 새로 가입시킨다 */
+	/** 이 소셜 계정으로 가입한 회원 (없으면 null) */
+	public Member findSocial(String provider, String providerId) throws SQLException {
+		return findOne("SELECT * FROM member WHERE provider = ? AND provider_id = ?", provider, providerId);
+	}
+
 	public Member findOrCreateSocial(String provider, String providerId, String name, String email)
 			throws SQLException {
 		Member m = findOne("SELECT * FROM member WHERE provider = ? AND provider_id = ?", provider, providerId);

@@ -2,8 +2,8 @@ package com.market.oauth;
 
 /**
  * 소셜 로그인(OAuth 2.0 인가 코드 방식) 제공자.
- * 지금은 MockSocialProvider만 있고, 실제 구글/네이버로 바꿀 때는
- * 이 인터페이스를 구현한 클래스를 만들어 SocialProviders에 등록하면 된다.
+ * 구현: OAuth2Provider(Kakao·Naver·Google 실제 연동) / MockSocialProvider(키가 없을 때 목업).
+ * 어느 쪽을 쓸지는 SocialProviders가 oauth.properties를 보고 정한다.
  *
  *  1. authorizeUrl  : 사용자를 제공자의 로그인 화면으로 보낼 주소
  *  2. (사용자가 로그인·동의하면 제공자가 callbackUrl?code=...&state=... 로 돌려보냄)
@@ -18,5 +18,5 @@ public interface SocialProvider {
 	String authorizeUrl(String contextPath, String state, String callbackUrl);
 
 	/** code가 틀렸거나 만료됐으면 null */
-	SocialProfile fetchProfile(String code, String callbackUrl);
+	SocialProfile fetchProfile(String code, String state, String callbackUrl);
 }

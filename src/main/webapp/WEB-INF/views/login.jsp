@@ -16,7 +16,7 @@
     <a class="btn-social btn-social--naver" href="${ctx}/oauth/naver/login?next=${fn:escapeXml(next)}"><ui:brand name="naver" /><span>네이버로 계속하기</span></a>
     <a class="btn-social btn-social--google" href="${ctx}/oauth/google/login?next=${fn:escapeXml(next)}"><ui:brand name="google" /><span>Google로 계속하기</span></a>
   </div>
-  <p class="t-help auth__note"><ui:icon name="info" cls="icon-sm" />지금은 테스트용 목업 로그인이에요. 실제 계정 정보는 쓰지 않아요.</p>
+  <c:if test="${socialMock}"><p class="t-help auth__note"><ui:icon name="info" cls="icon-sm" />지금은 테스트용 목업 로그인이에요. 실제 계정 정보는 쓰지 않아요.</p></c:if>
 
   <div class="divider">다른 방법으로 계속하기</div>
   <div class="round-actions">

@@ -44,7 +44,7 @@ public class MockSocialProvider implements SocialProvider {
 	}
 
 	@Override
-	public SocialProfile fetchProfile(String code, String callbackUrl) {
+	public SocialProfile fetchProfile(String code, String state, String callbackUrl) {
 		return code == null ? null : ISSUED.remove(code); // 한 번 쓰면 사라진다
 	}
 

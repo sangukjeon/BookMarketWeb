@@ -22,6 +22,8 @@ public final class Web {
 
 	public static void render(HttpServletRequest req, HttpServletResponse resp, String view)
 			throws ServletException, IOException {
+		if (view.equals("login") || view.equals("signup"))
+			req.setAttribute("socialMock", com.market.oauth.SocialProviders.anyMock());
 		req.getRequestDispatcher("/WEB-INF/views/" + view + ".jsp").forward(req, resp);
 	}
 
